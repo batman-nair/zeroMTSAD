@@ -46,8 +46,10 @@ if __name__ == '__main__':
     parser.add_argument('--seed', type=int, help='Random seed', required=False)
     parser.add_argument('--test_only', action='store_true', help='Only run the test step')
     parser.add_argument('-o', '--overrides', nargs='*', help='Manual config updates in the form key1=value1')
+    parser.add_argument('--disable_progress_bar', action='store_true', help='Disable progress bar')
     args = parser.parse_args()
 
+    # Configuration setup
     config = DEFAULT_CONFIG
     for config_path in args.config:
         config = recursive_update(config, _parse_config(config_path))
@@ -58,7 +60,10 @@ if __name__ == '__main__':
     if not config['experiment'] or not config['dataset']:
         raise ValueError('Experiment and dataset must be specified in the config')
 
-    logger = TensorBoardLogger('lightning_logs', name=f'{config["experiment"]}_{config["dataset"]}')
+    # Setting up the logger and loading the dataset and model
+    testing_server_ids = ','.join([str(id) for id in config['data_params']['test_server_ids']])
+    logger = TensorBoardLogger('lightning_logs',
+                               name=f'{config["experiment"]}_{config["dataset"]}_{testing_server_ids}')
     data_import = importlib.import_module(f'datasets.{config["dataset"]}')
     experiment_import = importlib.import_module(f'experiments.{config["experiment"]}')
 
@@ -71,8 +76,11 @@ if __name__ == '__main__':
     else:
         model = experiment_import.MODEL(config['transforms']['seq_len'], data_module.num_features, config['model_params'])
 
+    # Training and testing
     trainer = lp.Trainer(max_epochs=config['epochs'], logger=logger, deterministic=True,
-                         callbacks=[SaveConfigCallback(config)])
+                         callbacks=[SaveConfigCallback(config),
+                                    lp.callbacks.EarlyStopping(monitor='val_loss')],
+                         enable_progress_bar=not args.disable_progress_bar)
     if not args.test_only:
         trainer.fit(model=model, datamodule=data_module)
 
