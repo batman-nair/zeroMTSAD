@@ -66,6 +66,7 @@ class LitTimeSeADModel(lp.LightningModule):
         ax = plt.axes()
         timesead.utils.plot_utils.plot_sequence_against_anomaly(scores.tolist(), labels.tolist(), ax)
         fig.savefig(os.path.join(self.logger.log_dir, 'anomaly_plot.png'))
+        self.logger.experiment.add_figure('anomaly_plot', plt.gcf())
 
         self.testing_step_labels = []
         self.testing_step_scores = []
