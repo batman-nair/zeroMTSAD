@@ -44,6 +44,7 @@ if __name__ == '__main__':
     parser.add_argument('-c', '--config', nargs='+', help='Path to config files', required=True)
     parser.add_argument('--checkpoint_path', help='Path to the checkpoint file', required=False)
     parser.add_argument('--seed', type=int, help='Random seed', required=False)
+    parser.add_argument('--test_only', action='store_true', help='Only run the test step')
     parser.add_argument('-o', '--overrides', nargs='*', help='Manual config updates in the form key1=value1')
     args = parser.parse_args()
 
@@ -64,12 +65,16 @@ if __name__ == '__main__':
     train_transform = recursive_update(experiment_import.TRAIN_PIPELINE, config['transforms']['train'])
     test_transform = recursive_update(experiment_import.TEST_PIPELINE, config['transforms']['test'])
     data_module = data_import.DATASET(config['data_params'], train_transform, test_transform)
-    model = experiment_import.MODEL(config['transforms']['seq_len'], data_module.num_features, config['model_params'])
+    if args.checkpoint_path:
+        model = experiment_import.MODEL.load_from_checkpoint(args.checkpoint_path, seq_len=config['transforms']['seq_len'],
+                                                             num_features=data_module.num_features, model_params=config['model_params'])
+    else:
+        model = experiment_import.MODEL(config['transforms']['seq_len'], data_module.num_features, config['model_params'])
 
     trainer = lp.Trainer(max_epochs=config['epochs'], logger=logger, deterministic=True,
                          callbacks=[SaveConfigCallback(config)])
-    trainer.fit(model=model, datamodule=data_module)
+    if not args.test_only:
+        trainer.fit(model=model, datamodule=data_module)
 
     trainer.test(model, datamodule=data_module)
-
 
