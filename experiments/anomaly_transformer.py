@@ -14,19 +14,14 @@ class LitAnomalyTransformer(LitTimeSeADModel):
     def training_step(self, batch, batch_idx):
         b_inputs, b_targets = batch
         predictions = self.model(b_inputs[0])
-        loss1, loss2, recon_loss = self.loss(predictions, b_targets)
-        self.log('train_loss1', loss1, on_epoch=True)
-        self.log('train_loss2', loss2, on_epoch=True)
-        self.log('train_recon_loss', recon_loss, on_epoch=True)
+        loss1, loss2, _ = self.loss(predictions, b_targets)
         self.log('train_loss', loss1 + loss2, on_epoch=True)
         return loss1 + loss2
 
     def validation_step(self, batch, batch_idx):
         b_inputs, b_targets = batch
         outputs = self.model(b_inputs[0])
-        _, loss2, recon_loss = self.loss(outputs, b_targets)
-        self.log('val_loss1', recon_loss, on_epoch=True)
-        self.log('val_loss2', loss2-recon_loss, on_epoch=True)
+        _, _, recon_loss = self.loss(outputs, b_targets)
         self.log('val_loss', recon_loss, on_epoch=True)
         return recon_loss
 
