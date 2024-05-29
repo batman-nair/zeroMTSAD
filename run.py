@@ -52,7 +52,6 @@ if __name__ == '__main__':
     parser.add_argument('--disable_progress_bar', action='store_true', help='Disable progress bar')
     parser.add_argument('--suffix', type=str, help='Add suffix to the run name', required=False)
     args = parser.parse_args()
-    print('Args passed:', args)
     run_info = {'run_command': ' '.join(sys.argv)}
 
     # Configuration setup
@@ -88,7 +87,7 @@ if __name__ == '__main__':
 
     # Training and testing
     trainer = lp.Trainer(max_epochs=config['epochs'], logger=logger, deterministic=True,
-                         callbacks=[SaveConfigCallback(config),
+                         callbacks=[SaveConfigCallback(config, run_info),
                                     lp.callbacks.EarlyStopping(monitor='val_loss')],
                          enable_progress_bar=not args.disable_progress_bar)
     if not args.test_only:
