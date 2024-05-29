@@ -5,6 +5,7 @@ import lightning.pytorch as lp
 from lightning.pytorch.loggers import TensorBoardLogger
 
 from typing import Optional, List
+import sys
 import importlib
 import argparse
 import yaml
@@ -35,6 +36,8 @@ def _apply_config_updates(config: dict, updates: Optional[List[str]]):
         while '.' in key:
             first, key = key.split('.', 1)
             current = current[first]
+        if key not in current:
+            print(f'Creating new config entry with {update}')
         current[key] = eval(value)
     return config
 
@@ -47,7 +50,10 @@ if __name__ == '__main__':
     parser.add_argument('--test_only', action='store_true', help='Only run the test step')
     parser.add_argument('-o', '--overrides', nargs='*', help='Manual config updates in the form key1=value1')
     parser.add_argument('--disable_progress_bar', action='store_true', help='Disable progress bar')
+    parser.add_argument('--suffix', type=str, help='Add suffix to the run name', required=False)
     args = parser.parse_args()
+    print('Args passed:', args)
+    run_info = {'run_command': ' '.join(sys.argv)}
 
     # Configuration setup
     config = DEFAULT_CONFIG
@@ -56,14 +62,18 @@ if __name__ == '__main__':
     if args.seed:
         config['seed'] = args.seed
     config = _apply_config_updates(config, args.overrides)
+    print('Final config:', config)
 
     if not config['experiment'] or not config['dataset']:
         raise ValueError('Experiment and dataset must be specified in the config')
 
     # Setting up the logger and loading the dataset and model
     testing_server_ids = ','.join([str(id) for id in config['data_params']['test_server_ids']])
+    run_name = f'{config["experiment"]}_{config["dataset"]}_{testing_server_ids}'
+    if args.suffix:
+        run_name += f'_{args.suffix}'
     logger = TensorBoardLogger('lightning_logs',
-                               name=f'{config["experiment"]}_{config["dataset"]}_{testing_server_ids}')
+                               name=run_name)
     data_import = importlib.import_module(f'datasets.{config["dataset"]}')
     experiment_import = importlib.import_module(f'experiments.{config["experiment"]}')
 
