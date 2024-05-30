@@ -1,6 +1,7 @@
 from utils.utils import recursive_update
 from utils.lightning_utils import SaveConfigCallback
 
+import torch
 import lightning.pytorch as lp
 from lightning.pytorch.loggers import TensorBoardLogger
 
@@ -9,6 +10,7 @@ import sys
 import importlib
 import argparse
 import yaml
+import copy
 
 DEFAULT_CONFIG = {
     'seed': 10,
@@ -21,6 +23,29 @@ DEFAULT_CONFIG = {
         'seq_len': 0  # Should be updated by the experiment
     },
     'epochs': 1,
+    'model_params': {},
+    'detector_params': {},
+    'run_params': {
+        'optimizer': {
+            'class': 'torch.optim.Adam',
+            'args': {
+                'lr': 1e-4,
+            },
+        },
+        'scheduler': {
+            'class': 'torch.optim.lr_scheduler.StepLR',
+            'args': {
+                'step_size': 100,
+                'gamma': 1,
+            },
+        },
+        'callbacks': [
+            {
+                'class': 'lp.callbacks.EarlyStopping',
+                'args': {'monitor': 'val_loss', 'patience': 10}
+            }
+        ]
+    },
 }
 
 def _parse_config(config_path: str) -> dict:
@@ -40,6 +65,19 @@ def _apply_config_updates(config: dict, updates: Optional[List[str]]):
             print(f'Creating new config entry with {update}')
         current[key] = eval(value)
     return config
+
+def _convert_str_to_classes(config: dict):
+    # Convert class: 'module.class' to class: module.class
+    for key, value in config.items():
+        if isinstance(value, dict):
+            _convert_str_to_classes(value)
+        elif isinstance(value, list):
+            if isinstance(value[0], dict):
+                for item in value:
+                    _convert_str_to_classes(item)
+        elif isinstance(value, str):
+            if key == 'class':
+                config[key] = eval(value)
 
 
 if __name__ == '__main__':
@@ -61,10 +99,15 @@ if __name__ == '__main__':
     if args.seed:
         config['seed'] = args.seed
     config = _apply_config_updates(config, args.overrides)
+    config_dump = copy.deepcopy(config)
+    _convert_str_to_classes(config)
     print('Final config:', config)
 
     if not config['experiment'] or not config['dataset']:
         raise ValueError('Experiment and dataset must be specified in the config')
+
+
+    lp.seed_everything(config['seed'])
 
     # Setting up the logger and loading the dataset and model
     testing_server_ids = ','.join([str(id) for id in config['data_params']['test_server_ids']])
@@ -80,18 +123,33 @@ if __name__ == '__main__':
     test_transform = recursive_update(experiment_import.TEST_PIPELINE, config['transforms']['test'])
     data_module = data_import.DATASET(config['data_params'], train_transform, test_transform)
     if args.checkpoint_path:
-        model = experiment_import.MODEL.load_from_checkpoint(args.checkpoint_path, seq_len=config['transforms']['seq_len'],
-                                                             num_features=data_module.num_features, model_params=config['model_params'])
+        model = experiment_import.MODEL.load_from_checkpoint(args.checkpoint_path,
+                                                             seq_len=config['transforms']['seq_len'],
+                                                             num_features=data_module.num_features,
+                                                             model_params=config['model_params'],
+                                                             run_params=config['run_params'])
     else:
-        model = experiment_import.MODEL(config['transforms']['seq_len'], data_module.num_features, config['model_params'])
+        model = experiment_import.MODEL(config['transforms']['seq_len'],
+                                        data_module.num_features,
+                                        config['model_params'],
+                                        config['run_params'])
+
 
     # Training and testing
+    callbacks = [SaveConfigCallback(config_dump, run_info)]
+    for callback in config['run_params']['callbacks']:
+        callbacks.append(callback['class'](**callback['args']))
     trainer = lp.Trainer(max_epochs=config['epochs'], logger=logger, deterministic=True,
-                         callbacks=[SaveConfigCallback(config, run_info),
-                                    lp.callbacks.EarlyStopping(monitor='val_loss')],
+                         callbacks=callbacks,
                          enable_progress_bar=not args.disable_progress_bar)
     if not args.test_only:
         trainer.fit(model=model, datamodule=data_module)
 
+        model.setup_detector(config['detector_params'], data_module.val_dataloader())
+        trainer.save_checkpoint('final_model.pth')
+
+
+    # Reseed for testing
+    lp.seed_everything(config['seed'])
     trainer.test(model, datamodule=data_module)
 

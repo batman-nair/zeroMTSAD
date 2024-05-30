@@ -2,10 +2,11 @@ from experiments.timesead_wrapper import LitTimeSeADModel
 from timesead.models.reconstruction import AnomalyTransformer, AnomTransf_Loss, AnomTransf_AnomalyDetector
 from timesead_experiments.reconstruction.train_anomtransf import get_training_pipeline, get_test_pipeline
 
+import torch
 
 class LitAnomalyTransformer(LitTimeSeADModel):
-    def __init__(self, seq_len, num_features, model_params):
-        super().__init__()
+    def __init__(self, seq_len, num_features, model_params, run_params):
+        super().__init__(run_params)
         self.model = AnomalyTransformer(seq_len, num_features, **model_params)
         self.loss = AnomTransf_Loss(lamb=3.0)
         self.save_hyperparameters(model_params)
@@ -25,7 +26,7 @@ class LitAnomalyTransformer(LitTimeSeADModel):
         self.log('val_loss', recon_loss, on_epoch=True)
         return recon_loss
 
-    def on_test_start(self) -> None:
+    def setup_detector(self, detector_params: dict, val_loader: torch.utils.data.DataLoader) -> None:
         self.detector = AnomTransf_AnomalyDetector(self.model)
 
 

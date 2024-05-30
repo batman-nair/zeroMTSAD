@@ -12,7 +12,7 @@ class LitTimeSeADModel(lp.LightningModule):
     Implements the defaults for TimeSeAD models
     Note: self.detector should be defined in on_test_start
     '''
-    def __init__(self):
+    def __init__(self, run_params: dict):
         super().__init__()
         self.testing_step_labels = []
         self.testing_step_scores = []
@@ -20,6 +20,8 @@ class LitTimeSeADModel(lp.LightningModule):
         self.loss = torch.nn.MSELoss()
         self.evaluator = timesead.evaluation.Evaluator()
         self.metric = self.evaluator.best_ts_f1_score
+        self.run_params = run_params
+        self.detector = None
 
     def training_step(self, batch, batch_idx):
         b_inputs, b_targets = batch
@@ -36,13 +38,18 @@ class LitTimeSeADModel(lp.LightningModule):
         return loss
 
     def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.parameters())
-        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=100, gamma=1)
+        optimizer = self.run_params['optimizer']['class'](self.parameters(), **self.run_params['optimizer']['args'])
+        scheduler = self.run_params['scheduler']['class'](optimizer, **self.run_params['scheduler']['args'])
         return [optimizer], [scheduler]
 
-    def on_test_start(self) -> None:
+    def setup_detector(self, detector_params: dict, val_loader: torch.utils.data.DataLoader) -> None:
+        # Setup self.detector. Can use validation data to initialize the detector
         # self.detector = None
         raise NotImplementedError
+
+    def on_test_start(self) -> None:
+        if self.detector is None:
+            raise RuntimeError('Detector not initialized. Call setup_detector before testing')
 
     def test_step(self, batch, batch_idx):
         b_inputs, b_targets = batch
