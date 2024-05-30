@@ -6,6 +6,7 @@ model_params:
   d_ff: 256
   dropout: 0.0
   output_attention: True
+epochs: 100
 transforms:
   train:
     window:
