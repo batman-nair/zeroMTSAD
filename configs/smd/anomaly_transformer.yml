@@ -17,3 +17,11 @@ transforms:
       args:
         window_size: 50
   seq_len: 50  # Based on the window size of the training data
+run_params:
+  optimizer:
+    args:
+      lr: 1.0e-4
+  scheduler:
+    class: 'torch.optim.lr_scheduler.LambdaLR'
+    args:
+      lr_lambda: 'lambda epoch: 0.95 ** (epoch - 1)'

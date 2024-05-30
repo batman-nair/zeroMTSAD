@@ -30,7 +30,7 @@ DEFAULT_CONFIG = {
         'optimizer': {
             'class': 'torch.optim.Adam',
             'args': {
-                'lr': 1e-4,
+                'lr': 1e-3,
             },
         },
         'scheduler': {
@@ -67,17 +67,20 @@ def _apply_config_updates(config: dict, updates: Optional[List[str]]):
         current[key] = eval(value)
     return config
 
-def _convert_str_to_classes(config: dict):
+def _convert_str_to_objects(config: dict):
     # Convert class: 'module.class' to class: module.class
     for key, value in config.items():
         if isinstance(value, dict):
-            _convert_str_to_classes(value)
+            _convert_str_to_objects(value)
         elif isinstance(value, list):
             if isinstance(value[0], dict):
                 for item in value:
-                    _convert_str_to_classes(item)
+                    _convert_str_to_objects(item)
         elif isinstance(value, str):
             if key == 'class':
+                config[key] = eval(value)
+            # Convert lambda functions
+            if value.startswith('lambda'):
                 config[key] = eval(value)
 
 
@@ -101,7 +104,7 @@ if __name__ == '__main__':
         config['seed'] = args.seed
     config = _apply_config_updates(config, args.overrides)
     config_dump = copy.deepcopy(config)
-    _convert_str_to_classes(config)
+    _convert_str_to_objects(config)
     print('Final config:', config)
 
     if not config['experiment'] or not config['dataset']:
