@@ -6,6 +6,7 @@ import lightning.pytorch as lp
 from lightning.pytorch.loggers import TensorBoardLogger
 
 from typing import Optional, List
+import os
 import sys
 import importlib
 import argparse
@@ -146,7 +147,7 @@ if __name__ == '__main__':
         trainer.fit(model=model, datamodule=data_module)
 
         model.setup_detector(config['detector_params'], data_module.val_dataloader())
-        trainer.save_checkpoint('final_model.pth')
+        trainer.save_checkpoint(os.path.join(logger.log_dir, 'final_model.pth'))
 
 
     # Reseed for testing
