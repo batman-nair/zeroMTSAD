@@ -25,15 +25,15 @@ class LitTimeSeADModel(lp.LightningModule):
 
     def training_step(self, batch, batch_idx):
         b_inputs, b_targets = batch
-        predictions = self.model(b_inputs[0])
-        loss = self.loss(predictions, b_targets)
+        predictions = self.model(b_inputs)
+        loss = self.loss(predictions, b_targets[0])
         self.log('train_loss', loss, on_epoch=True)
         return loss
 
     def validation_step(self, batch, batch_idx):
         b_inputs, b_targets = batch
-        predictions = self.model(b_inputs[0])
-        loss = self.loss(predictions, b_targets)
+        predictions = self.model(b_inputs)
+        loss = self.loss(predictions, b_targets[0])
         self.log('val_loss', loss, on_epoch=True)
         return loss
 

@@ -1,0 +1,21 @@
+experiment: lstm_ae
+model_params:
+  hidden_dimensions: [40]
+epochs: 70
+transforms:
+  train:
+    window:
+      args:
+        window_size: 50
+  test:
+    window:
+      args:
+        window_size: 50
+  seq_len: 50  # Based on the window size of the training data
+run_params:
+  scheduler:
+    class: 'torch.optim.lr_scheduler.MultiStepLR'
+    args:
+      milestones: [20]
+      gamma: 0.1
+
