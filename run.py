@@ -125,6 +125,9 @@ if __name__ == '__main__':
 
     train_transform = recursive_update(experiment_import.TRAIN_PIPELINE, config['transforms']['train'])
     test_transform = recursive_update(experiment_import.TEST_PIPELINE, config['transforms']['test'])
+    if config['transforms']['train'] or config['transforms']['test']:
+        print('Train transform pipeline:', train_transform)
+        print('Test transform pipeline:', test_transform)
     data_module = data_import.DATASET(config['data_params'], train_transform, test_transform)
     if args.checkpoint_path:
         model = experiment_import.MODEL.load_from_checkpoint(args.checkpoint_path,
