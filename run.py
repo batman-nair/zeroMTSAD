@@ -130,11 +130,7 @@ if __name__ == '__main__':
         print('Test transform pipeline:', test_transform)
     data_module = data_import.DATASET(config['data_params'], train_transform, test_transform)
     if args.checkpoint_path:
-        model = experiment_import.MODEL.load_from_checkpoint(args.checkpoint_path,
-                                                             seq_len=config['transforms']['seq_len'],
-                                                             num_features=data_module.num_features,
-                                                             model_params=config['model_params'],
-                                                             run_params=config['run_params'])
+        model = torch.load(args.checkpoint_path)['model']
     else:
         model = experiment_import.MODEL(config['transforms']['seq_len'],
                                         data_module.num_features,
@@ -153,8 +149,7 @@ if __name__ == '__main__':
         trainer.fit(model=model, datamodule=data_module)
 
         model.setup_detector(config['detector_params'], data_module.val_dataloader())
-        trainer.save_checkpoint(os.path.join(logger.log_dir, 'final_model.pth'))
-
+        torch.save(dict(model=model, detector=model.detector), os.path.join(logger.log_dir, 'final_model.pth'))
 
     # Reseed for testing
     lp.seed_everything(config['seed'])
