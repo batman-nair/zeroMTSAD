@@ -19,7 +19,14 @@ class LitTimeSeADModel(lp.LightningModule):
         self.model = None
         self.loss = torch.nn.MSELoss()
         self.evaluator = timesead.evaluation.Evaluator()
-        self.metric = self.evaluator.best_ts_f1_score
+        self.metrics = {
+            'best_ts_f1_score': self.evaluator.best_ts_f1_score,
+            'ts_auprc': self.evaluator.ts_auprc,
+            'best_ts_f1_score_classic': self.evaluator.best_ts_f1_score_classic,
+            'ts_auprc_unweighted': self.evaluator.ts_auprc_unweighted,
+            'best_f1_score': self.evaluator.best_f1_score,
+            'auprc': self.evaluator.auprc,
+        }
         self.run_params = run_params
         self.detector = None
 
@@ -63,11 +70,14 @@ class LitTimeSeADModel(lp.LightningModule):
         labels = torch.cat(self.testing_step_labels, dim=0)
         assert labels.shape == scores.shape
 
-        test_score, other_info = self.metric(labels, scores)
-        self.logger.log_metrics({'test_score': test_score, **other_info})
+        results = {}
+        for metric_name, metric_fn in self.metrics.items():
+            test_score, other_info = metric_fn(labels, scores)
+            results[metric_name] = {'score': test_score, 'other_info': other_info}
+        self.logger.log_metrics({name: results[name]['score'] for name in results})
         with open(os.path.join(self.logger.log_dir, 'results.json'), 'w') as ff:
-            json.dump({'test_score': test_score, 'other_info': other_info}, ff)
-        print('Testing score:', test_score, other_info)
+            json.dump(results, ff, indent=4)
+        print('Testing score:', results)
 
         fig = plt.figure()
         ax = plt.axes()
