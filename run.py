@@ -12,6 +12,7 @@ import importlib
 import argparse
 import yaml
 import copy
+import json
 
 DEFAULT_CONFIG = {
     'seed': 10,
@@ -83,6 +84,24 @@ def _convert_str_to_objects(config: dict):
             if value.startswith('lambda'):
                 config[key] = eval(value)
 
+def _sanity_check_checkpoint(checkpoint_path: str, config: dict):
+    checkpoint_config_path = os.path.join(os.path.dirname(checkpoint_path), 'config.json')
+    if not os.path.exists(checkpoint_config_path):
+        print('Checkpoint is not in logging directory, skipping config check')
+        return
+
+    config1, config2 = None, None
+    def remove_non_training_data(config: dict):
+        del config['data_params']['test_server_ids']
+    with open(checkpoint_config_path, 'r') as ff:
+        checkpoint_config = json.load(ff)
+        config1 = copy.deepcopy(config)
+        config2 = copy.deepcopy(checkpoint_config)
+    remove_non_training_data(config1)
+    remove_non_training_data(config2)
+    if config1 != config2:
+        raise ValueError('Configurations do not match between the checkpoint and the current run')
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -130,6 +149,7 @@ if __name__ == '__main__':
         print('Test transform pipeline:', test_transform)
     data_module = data_import.DATASET(config['data_params'], train_transform, test_transform)
     if args.checkpoint_path:
+        _sanity_check_checkpoint(args.checkpoint_path, config_dump)
         model = torch.load(args.checkpoint_path)['model']
     else:
         model = experiment_import.MODEL(config['transforms']['seq_len'],
