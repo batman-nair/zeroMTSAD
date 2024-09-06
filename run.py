@@ -100,6 +100,8 @@ def _sanity_check_checkpoint(checkpoint_path: str, config: dict):
     remove_non_training_data(config1)
     remove_non_training_data(config2)
     if config1 != config2:
+        print('Run config:', config1)
+        print('Checkpoint config:', config2)
         raise ValueError('Configurations do not match between the checkpoint and the current run')
 
 
@@ -150,7 +152,15 @@ if __name__ == '__main__':
     data_module = data_import.DATASET(config['data_params'], train_transform, test_transform)
     if args.checkpoint_path:
         _sanity_check_checkpoint(args.checkpoint_path, config_dump)
-        model = torch.load(args.checkpoint_path)['model']
+        loaded_data = torch.load(args.checkpoint_path)
+        if 'model' not in loaded_data:
+            model = experiment_import.MODEL(config['transforms']['seq_len'],
+                                            data_module.num_features,
+                                            config['model_params'],
+                                            config['run_params'])
+            model.detector = loaded_data['detector']
+        else:
+            model = torch.load(args.checkpoint_path)['model']
     else:
         model = experiment_import.MODEL(config['transforms']['seq_len'],
                                         data_module.num_features,
@@ -169,7 +179,11 @@ if __name__ == '__main__':
         trainer.fit(model=model, datamodule=data_module)
 
         model.setup_detector(config['detector_params'], data_module.val_dataloader())
-        torch.save(dict(model=model, detector=model.detector), os.path.join(logger.log_dir, 'final_model.pth'))
+        try:
+            torch.save(dict(detector=model.detector), os.path.join(logger.log_dir, 'final_model.pth'))
+        except Exception as ee:
+            print('Exception occurred when saving model, trying to save just the detector')
+            torch.save(dict(model=model, detector=model.detector), os.path.join(logger.log_dir, 'final_model.pth'))
 
     # Reseed for testing
     lp.seed_everything(config['seed'])
