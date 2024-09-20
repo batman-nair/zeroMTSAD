@@ -23,7 +23,8 @@ class SMDDataModule(lp.LightningDataModule):
         self.standardize = standardize
 
     def prepare_data(self) -> None:
-        SMDDataset(server_id=1, download=True, preprocess=True)
+        SMDDataset(server_id=1, download=True, preprocess=False)
+        # Standardization has to be done dynamically as training server_ids can change
         if self.standardize == 'minmax':
             self._calculate_minmax_stats()
             self.standardize_fn = lambda data, **_: minmax_scaler(data, self.stats)
