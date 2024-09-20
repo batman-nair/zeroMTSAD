@@ -57,6 +57,8 @@ class LitTimeSeADModel(lp.LightningModule):
     def on_test_start(self) -> None:
         if self.detector is None:
             raise RuntimeError('Detector not initialized. Call setup_detector before testing')
+        self.testing_step_labels = []
+        self.testing_step_scores = []
 
     def test_step(self, batch, batch_idx):
         b_inputs, b_targets = batch
@@ -70,6 +72,10 @@ class LitTimeSeADModel(lp.LightningModule):
         labels = torch.cat(self.testing_step_labels, dim=0)
         assert labels.shape == scores.shape
 
+        self._log_results(labels, scores)
+        self._plot_anomalies(labels, scores)
+
+    def _log_results(self, labels, scores):
         results = {}
         for metric_name, metric_fn in self.metrics.items():
             test_score, other_info = metric_fn(labels, scores)
@@ -79,14 +85,13 @@ class LitTimeSeADModel(lp.LightningModule):
             json.dump(results, ff, indent=4)
         print('Testing score:', results)
 
+    def _plot_anomalies(self, labels, scores):
         fig = plt.figure()
         ax = plt.axes()
         timesead.utils.plot_utils.plot_sequence_against_anomaly(scores.tolist(), labels.tolist(), ax)
         fig.savefig(os.path.join(self.logger.log_dir, 'anomaly_plot.png'))
         self.logger.experiment.add_figure('anomaly_plot', plt.gcf())
 
-        self.testing_step_labels = []
-        self.testing_step_scores = []
 
 
 MODEL = LitTimeSeADModel
