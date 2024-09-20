@@ -1,0 +1,31 @@
+experiment: gdn
+model_params:
+  dim: 64
+  out_layer_hidden_dims: [64,]
+  topk: 15
+  dropout_prob: 0.2
+epochs: 100
+transforms:
+  train:
+    prediction:
+      args:
+        window_size: 5
+        prediction_horizon: 1
+        replace_labels: True
+  test:
+    prediction:
+      args:
+        window_size: 5
+        prediction_horizon: 1
+        replace_labels: False
+  seq_len: 5  # Based on the window size of the training data
+run_params:
+  optimizer:
+    args:
+      lr: 1.0e-4
+  scheduler:
+    class: 'torch.optim.lr_scheduler.MultiStepLR'
+    args:
+      milestones: [20]
+      gamma: 0.1
+
