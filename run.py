@@ -25,6 +25,7 @@ DEFAULT_CONFIG = {
         'seq_len': 0  # Should be updated by the experiment
     },
     'epochs': 1,
+    'batch_size': 128,
     'model_params': {},
     'detector_params': {},
     'run_params': {
@@ -149,7 +150,7 @@ if __name__ == '__main__':
     if config['transforms']['train'] or config['transforms']['test']:
         print('Train transform pipeline:', train_transform)
         print('Test transform pipeline:', test_transform)
-    data_module = data_import.DATASET(config['data_params'], train_transform, test_transform)
+    data_module = data_import.DATASET(config['data_params'], config['batch_size'], train_transform, test_transform)
     if args.checkpoint_path:
         _sanity_check_checkpoint(args.checkpoint_path, config_dump)
         loaded_data = torch.load(args.checkpoint_path)

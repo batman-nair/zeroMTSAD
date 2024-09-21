@@ -10,8 +10,7 @@ import functools
 
 class SMDDataModule(lp.LightningDataModule):
     SMD_NUM_FEATURES = 38
-    def __init__(self, data_params: dict, train_pipeline: dict={}, test_pipeline: dict={},
-                 standardize: str='minmax'):
+    def __init__(self, data_params: dict, batch_size: int, train_pipeline: dict={}, test_pipeline: dict={}, standardize: str='minmax'):
         super().__init__()
         self.train_server_ids = data_params['train_server_ids']
         self.val_server_ids = data_params['val_server_ids']
@@ -19,6 +18,7 @@ class SMDDataModule(lp.LightningDataModule):
         self.train_pipeline = train_pipeline
         self.test_pipeline = test_pipeline
         self.data_splits = data_params['data_splits']
+        self.batch_size = batch_size
         self.num_features = self.SMD_NUM_FEATURES
         self.standardize = standardize
 
@@ -66,13 +66,13 @@ class SMDDataModule(lp.LightningDataModule):
             self.combined_test_dataset = torch.utils.data.ConcatDataset(transfomed_test_data)
 
     def train_dataloader(self) -> torch.utils.data.DataLoader:
-        return torch.utils.data.DataLoader(self.combined_train_dataset, batch_size=128, num_workers=0, shuffle=False)
+        return torch.utils.data.DataLoader(self.combined_train_dataset, batch_size=self.batch_size, num_workers=0, shuffle=False)
 
     def val_dataloader(self) -> torch.utils.data.DataLoader:
-        return torch.utils.data.DataLoader(self.combined_val_dataset, batch_size=128, num_workers=0, shuffle=False)
+        return torch.utils.data.DataLoader(self.combined_val_dataset, batch_size=self.batch_size, num_workers=0, shuffle=False)
 
     def test_dataloader(self) -> torch.utils.data.DataLoader:
-        return torch.utils.data.DataLoader(self.combined_test_dataset, batch_size=128, num_workers=0, shuffle=False)
+        return torch.utils.data.DataLoader(self.combined_test_dataset, batch_size=self.batch_size, num_workers=0, shuffle=False)
 
 
 DATASET = SMDDataModule
