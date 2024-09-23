@@ -1,4 +1,5 @@
 import timesead
+from timesead_experiments.utils.training_ingredient import instantiate_loss
 
 import torch
 import lightning.pytorch as lp
@@ -17,7 +18,7 @@ class LitTimeSeADModel(lp.LightningModule):
         self.testing_step_labels = []
         self.testing_step_scores = []
         self.model = None
-        self.loss = torch.nn.MSELoss()
+        self.loss = instantiate_loss(torch.nn.MSELoss())
         self.evaluator = timesead.evaluation.Evaluator()
         self.metrics = {
             'best_ts_f1_score': self.evaluator.best_ts_f1_score,
@@ -31,17 +32,21 @@ class LitTimeSeADModel(lp.LightningModule):
         self.detector = None
 
     def training_step(self, batch, batch_idx):
-        b_inputs, b_targets = batch
-        predictions = self.model(b_inputs)
-        loss = self.loss(predictions, b_targets[0])
+        loss = self._calculate_batch_loss(batch)
         self.log('train_loss', loss, on_epoch=True)
         return loss
 
     def validation_step(self, batch, batch_idx):
+        loss = self._calculate_batch_loss(batch)
+        self.log('val_loss', loss, on_epoch=True)
+        return loss
+
+    def _calculate_batch_loss(self, batch):
         b_inputs, b_targets = batch
         predictions = self.model(b_inputs)
-        loss = self.loss(predictions, b_targets[0])
-        self.log('val_loss', loss, on_epoch=True)
+        if not isinstance(predictions, tuple):
+            predictions = (predictions,)
+        loss = self.loss(predictions, b_targets)
         return loss
 
     def configure_optimizers(self):
