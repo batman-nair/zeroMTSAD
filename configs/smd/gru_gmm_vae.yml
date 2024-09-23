@@ -1,0 +1,27 @@
+experiment: gru_gmm_vae
+model_params:
+  gru_hidden_dims: [60]
+  latent_dim: 8
+  gmm_components: 2
+epochs: 100
+transforms:
+  train:
+    window:
+      args:
+        window_size: 10
+  test:
+    window:
+      args:
+        window_size: 10
+  seq_len: 10  # Based on the window size of the training data
+run_params:
+  optimizer:
+    args:
+      lr: 1.0e-4
+  scheduler:
+    class: 'torch.optim.lr_scheduler.MultiStepLR'
+    args:
+      milestones: [20]
+      gamma: 0.1
+detector_params:
+  num_mc_samples: 2
