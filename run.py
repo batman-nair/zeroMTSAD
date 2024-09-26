@@ -116,7 +116,8 @@ if __name__ == '__main__':
     parser.add_argument('--disable_progress_bar', action='store_true', help='Disable progress bar')
     parser.add_argument('--suffix', type=str, help='Add suffix to the run name', required=False)
     args = parser.parse_args()
-    run_info = {'run_command': ' '.join(sys.argv)}
+    run_info = args.__dict__.copy()
+    run_info['run_command'] = ' '.join(sys.argv)
 
     # Configuration setup
     config = DEFAULT_CONFIG
@@ -127,6 +128,7 @@ if __name__ == '__main__':
     config = _apply_config_updates(config, args.overrides)
     config_dump = copy.deepcopy(config)
     _convert_str_to_objects(config)
+    print('Running experiment', config['experiment'], 'on dataset', config['dataset'])
     print('Final config:', config)
 
     if not config['experiment'] or not config['dataset']:
