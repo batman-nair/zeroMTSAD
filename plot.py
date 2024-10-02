@@ -29,6 +29,8 @@ if __name__ == '__main__':
         config = json.load(ff)
     with open(results_path, 'r') as ff:
         results = json.load(ff)
+    if 'batch_size' not in config:
+        config['batch_size'] = 128
 
     data_import = importlib.import_module(f'datasets.{config["dataset"]}')
     experiment_import = importlib.import_module(f'experiments.{config["experiment"]}')
