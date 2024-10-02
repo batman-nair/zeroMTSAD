@@ -1,4 +1,4 @@
-from utils.utils import recursive_update
+from utils.utils import recursive_update, get_final_config, convert_str_to_objects
 from utils.lightning_utils import SaveConfigCallback
 
 import torch
@@ -10,80 +10,9 @@ import os
 import sys
 import importlib
 import argparse
-import yaml
 import copy
 import json
 
-DEFAULT_CONFIG = {
-    'seed': 10,
-    'data_params': {
-        'data_splits': [0.75, 0.25],
-    },
-    'transforms': {
-        'train': {},
-        'test': {},
-        'seq_len': 0  # Should be updated by the experiment
-    },
-    'epochs': 1,
-    'batch_size': 128,
-    'model_params': {},
-    'detector_params': {},
-    'run_params': {
-        'optimizer': {
-            'class': 'torch.optim.Adam',
-            'args': {
-                'lr': 1e-3,
-            },
-        },
-        'scheduler': {
-            'class': 'torch.optim.lr_scheduler.StepLR',
-            'args': {
-                'step_size': 100,
-                'gamma': 1,
-            },
-        },
-        'callbacks': [
-            {
-                'class': 'lp.callbacks.EarlyStopping',
-                'args': {'monitor': 'val_loss', 'patience': 10}
-            }
-        ]
-    },
-}
-
-def _parse_config(config_path: str) -> dict:
-    with open(config_path, 'r') as ff:
-        return yaml.safe_load(ff)
-
-def _apply_config_updates(config: dict, updates: Optional[List[str]]):
-    if updates is None:
-        return config
-    for update in updates:
-        key, value = update.split('=')
-        current = config
-        while '.' in key:
-            first, key = key.split('.', 1)
-            current = current[first]
-        if key not in current:
-            print(f'Creating new config entry with {update}')
-        current[key] = eval(value)
-    return config
-
-def _convert_str_to_objects(config: dict):
-    # Convert class: 'module.class' to class: module.class
-    for key, value in config.items():
-        if isinstance(value, dict):
-            _convert_str_to_objects(value)
-        elif isinstance(value, list):
-            if isinstance(value[0], dict):
-                for item in value:
-                    _convert_str_to_objects(item)
-        elif isinstance(value, str):
-            if key == 'class':
-                config[key] = eval(value)
-            # Convert lambda functions
-            if value.startswith('lambda'):
-                config[key] = eval(value)
 
 def _sanity_check_checkpoint(checkpoint_path: str, config: dict):
     checkpoint_config_path = os.path.join(os.path.dirname(checkpoint_path), 'config.json')
@@ -119,15 +48,12 @@ if __name__ == '__main__':
     run_info = args.__dict__.copy()
     run_info['run_command'] = ' '.join(sys.argv)
 
-    # Configuration setup
-    config = DEFAULT_CONFIG
-    for config_path in args.config:
-        config = recursive_update(config, _parse_config(config_path))
+    overrides = args.overrides
     if args.seed:
-        config['seed'] = args.seed
-    config = _apply_config_updates(config, args.overrides)
-    config_dump = copy.deepcopy(config)
-    _convert_str_to_objects(config)
+        overrides.append(f'seed={args.seed}')
+    config = get_final_config(args.config, overrides)
+    raw_config = copy.deepcopy(config)
+    convert_str_to_objects(config)
     print('Running experiment', config['experiment'], 'on dataset', config['dataset'])
     print('Final config:', config)
 
@@ -154,7 +80,7 @@ if __name__ == '__main__':
         print('Test transform pipeline:', test_transform)
     data_module = data_import.DATASET(config['data_params'], config['batch_size'], train_transform, test_transform)
     if args.checkpoint_path:
-        _sanity_check_checkpoint(args.checkpoint_path, config_dump)
+        _sanity_check_checkpoint(args.checkpoint_path, raw_config)
         loaded_data = torch.load(args.checkpoint_path)
         if 'model' not in loaded_data:
             model = experiment_import.MODEL(config['transforms']['seq_len'],
@@ -172,7 +98,7 @@ if __name__ == '__main__':
 
 
     # Training and testing
-    callbacks = [SaveConfigCallback(config_dump, run_info)]
+    callbacks = [SaveConfigCallback(raw_config, run_info)]
     for callback in config['run_params']['callbacks']:
         callbacks.append(callback['class'](**callback['args']))
     trainer = lp.Trainer(max_epochs=config['epochs'], logger=logger, deterministic=True,
