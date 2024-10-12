@@ -1,3 +1,8 @@
+"""
+This script is used to run hyperparameter tuning using Optuna.
+It takes in config files and overrides as input. \
+The search parameters are defined in the tuning module for the experiment (tuning.{experiment}).
+"""
 import argparse
 import sys
 import importlib
@@ -8,31 +13,17 @@ import lightning.pytorch as lp
 import optuna
 from lightning.pytorch.loggers import TensorBoardLogger
 
-from utils.utils import get_final_config, recursive_update, convert_str_to_objects
+from utils.utils import get_final_config, recursive_update, convert_str_to_objects, apply_config_updates
 from utils.lightning_utils import SaveConfigCallback
 
 
-def objective(trial: optuna.trial.Trial, config_files, run_info):
-    hidden_dimensions = trial.suggest_categorical(
-        'hidden_dimensions',
-        [
-            "[30]",
-            "[40]",
-            "[30, 30]",
-            "[50, 50]"
-        ])
-    window_size = trial.suggest_int('window_size', 5, 100)
-    learning_rate = trial.suggest_loguniform('learning_rate', 1e-5, 1e-1)
+def objective(trial: optuna.trial.Trial, base_config: dict, run_info: dict):
+    tuning_import = importlib.import_module(f'tuning.{base_config["experiment"]}')
+    trial_generate_fn = tuning_import.generate_trial_overrides
+    trial_overrides = trial_generate_fn(trial)
 
-    overrides = [
-        f'model_params.hidden_dimensions={hidden_dimensions}',
-        f'transforms.train.window.args.window_size={window_size}',
-        f'transforms.test.window.args.window_size={window_size}',
-        f'transforms.seq_len={window_size}',
-        f'run_params.optimizer.args.lr={learning_rate}',
-    ]
-
-    config = get_final_config(config_files, overrides)
+    base_config = copy.deepcopy(base_config)
+    config = apply_config_updates(base_config, trial_overrides)
     raw_config = copy.deepcopy(config)
     convert_str_to_objects(config)
 
@@ -43,12 +34,12 @@ def objective(trial: optuna.trial.Trial, config_files, run_info):
     print('Running experiment', config['experiment'], 'on dataset', config['dataset'])
     print('Final config:', config)
 
+
     lp.seed_everything(config['seed'])
 
     # Setting up the logger and loading the dataset and model
-    testing_server_ids = ','.join([str(id) for id in config['data_params']['test_server_ids']])
-    run_name = f'{config["experiment"]}_{config["dataset"]}_{testing_server_ids}'
-    logger = TensorBoardLogger('lightning_logs', name=run_name)
+    run_name = f'{config["experiment"]}_{config["dataset"]}'
+    logger = TensorBoardLogger('optuna_logs', name=run_name)
     data_import = importlib.import_module(f'datasets.{config["dataset"]}')
     experiment_import = importlib.import_module(f'experiments.{config["experiment"]}')
 
@@ -75,14 +66,28 @@ def objective(trial: optuna.trial.Trial, config_files, run_info):
 
 
 if __name__ == '__main__':
-    run_info = {
-        'optuna_run': True,
-        'run_command': ' '.join(sys.argv),
-    }
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-c', '--configs', nargs='+', help='Path to defualt config files', required=True)
+    parser.add_argument('-o', '--overrides', nargs='*', help='Manual config updates in the form key1=value1')
+    parser.add_argument('--resume', action='store_true', help='Resume existing study')
+    args = parser.parse_args()
+    run_info = args.__dict__.copy()
+    run_info['optuna_run'] = True
+    run_info['run_command'] = ' '.join(sys.argv)
 
     config_files = ['configs/smd/smd.yml', 'configs/smd/lstm_ae.yml']
-    objective_fn = lambda trial: objective(trial, config_files, run_info)
+    base_config = get_final_config(args.configs, args.overrides)
+    objective_fn = lambda trial: objective(trial, base_config, run_info)
 
-    study = optuna.create_study()
-    study.optimize(objective_fn, n_trials=10)
+
+    study_name = f'{base_config["experiment"]}_{base_config["dataset"]}'
+    db_path = 'sqlite:///optuna.db'
+    if not args.resume:
+        optuna.delete_study(study_name, storage=db_path)
+    study = optuna.create_study(
+        study_name=study_name,
+        storage=db_path,
+        load_if_exists=True
+        )
+    study.optimize(objective_fn, n_trials=50)
     print(study.best_params)

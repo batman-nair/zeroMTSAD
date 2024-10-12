@@ -2,6 +2,8 @@ from typing import List, Optional
 import collections
 import copy
 import yaml
+
+# These imports are needed for dynamic class instantiation
 import torch
 import lightning.pytorch as lp
 
@@ -47,7 +49,7 @@ def _parse_config(config_path: str) -> dict:
     with open(config_path, 'r') as ff:
         return yaml.safe_load(ff)
 
-def _apply_config_updates(config: dict, updates: Optional[List[str]]):
+def apply_config_updates(config: dict, updates: Optional[List[str]]):
     if updates is None:
         return config
     for update in updates:
@@ -65,12 +67,12 @@ def get_final_config(config_paths: List[str], updates: list):
     config = copy.deepcopy(DEFAULT_CONFIG)
     for config_path in config_paths:
         config = recursive_update(config, _parse_config(config_path))
-    config = _apply_config_updates(config, updates)
+    config = apply_config_updates(config, updates)
     return config
 
 
 def convert_str_to_objects(config: dict):
-    # Convert class: 'module.class' to class: module.class
+    """Convert class: 'module.class' to class: module.class inside the dictionary."""
     for key, value in config.items():
         if isinstance(value, dict):
             convert_str_to_objects(value)
