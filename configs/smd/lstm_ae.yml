@@ -1,7 +1,7 @@
 experiment: lstm_ae
 model_params:
   hidden_dimensions: [40]
-epochs: 70
+epochs: 100
 transforms:
   train:
     window:
