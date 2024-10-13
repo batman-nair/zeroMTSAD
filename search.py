@@ -58,7 +58,7 @@ def objective(trial: optuna.trial.Trial, base_config: dict, run_info: dict):
         callbacks.append(callback['class'](**callback['args']))
     trainer = lp.Trainer(max_epochs=config['epochs'], logger=logger, deterministic=True,
                          callbacks=callbacks,
-                         enable_progress_bar=False)
+                         enable_progress_bar=not run_info['disable_progress_bar'])
 
     trainer.fit(model=model, datamodule=data_module)
 
@@ -69,13 +69,13 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--configs', nargs='+', help='Path to defualt config files', required=True)
     parser.add_argument('-o', '--overrides', nargs='*', help='Manual config updates in the form key1=value1')
+    parser.add_argument('--disable_progress_bar', action='store_true', help='Disable progress bar')
     parser.add_argument('--resume', action='store_true', help='Resume existing study')
     args = parser.parse_args()
     run_info = args.__dict__.copy()
     run_info['optuna_run'] = True
     run_info['run_command'] = ' '.join(sys.argv)
 
-    config_files = ['configs/smd/smd.yml', 'configs/smd/lstm_ae.yml']
     base_config = get_final_config(args.configs, args.overrides)
     objective_fn = lambda trial: objective(trial, base_config, run_info)
 
@@ -83,7 +83,10 @@ if __name__ == '__main__':
     study_name = f'{base_config["experiment"]}_{base_config["dataset"]}'
     db_path = 'sqlite:///optuna.db'
     if not args.resume:
-        optuna.delete_study(study_name, storage=db_path)
+        try:
+            optuna.delete_study(study_name, storage=db_path)
+        except KeyError:
+            pass
     study = optuna.create_study(
         study_name=study_name,
         storage=db_path,
