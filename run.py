@@ -44,6 +44,8 @@ if __name__ == '__main__':
     parser.add_argument('-o', '--overrides', nargs='*', help='Manual config updates in the form key1=value1')
     parser.add_argument('--disable_progress_bar', action='store_true', help='Disable progress bar')
     parser.add_argument('--suffix', type=str, help='Add suffix to the run name', required=False)
+    parser.add_argument('--log_dir', type=str, help='The base directory to save logs in', required=False, default='lightning_logs')
+
     args = parser.parse_args()
     run_info = args.__dict__.copy()
     run_info['run_command'] = ' '.join(sys.argv)
@@ -68,8 +70,7 @@ if __name__ == '__main__':
     run_name = f'{config["experiment"]}_{config["dataset"]}_{testing_server_ids}'
     if args.suffix:
         run_name += f'_{args.suffix}'
-    logger = TensorBoardLogger('lightning_logs',
-                               name=run_name)
+    logger = TensorBoardLogger(args.log_dir, name=run_name)
     data_import = importlib.import_module(f'datasets.{config["dataset"]}')
     experiment_import = importlib.import_module(f'experiments.{config["experiment"]}')
 
