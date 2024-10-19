@@ -7,20 +7,24 @@ import argparse
 import sys
 import importlib
 import copy
+from typing import List
 
 import torch
 import lightning.pytorch as lp
 import optuna
 from lightning.pytorch.loggers import TensorBoardLogger
+from lightning.pytorch.callbacks import LearningRateMonitor
 
 from utils.utils import get_final_config, recursive_update, convert_str_to_objects, apply_config_updates
 from utils.lightning_utils import SaveConfigCallback
 
 
-def objective(trial: optuna.trial.Trial, base_config: dict, run_info: dict):
-    tuning_import = importlib.import_module(f'tuning.{base_config["experiment"]}')
-    trial_generate_fn = tuning_import.generate_trial_overrides
-    trial_overrides = trial_generate_fn(trial)
+def objective(trial: optuna.trial.Trial, tuning_modules: List[str], base_config: dict, run_info: dict):
+    trial_overrides = []
+    for module in tuning_modules:
+        tuning_import = importlib.import_module(f'tuning.{module}')
+        trial_generate_fn = tuning_import.generate_trial_overrides
+        trial_overrides += trial_generate_fn(trial)
 
     base_config = copy.deepcopy(base_config)
     config = apply_config_updates(base_config, trial_overrides)
@@ -53,7 +57,7 @@ def objective(trial: optuna.trial.Trial, base_config: dict, run_info: dict):
 
 
     # Training and testing
-    callbacks = [SaveConfigCallback(raw_config, run_info)]
+    callbacks = [SaveConfigCallback(raw_config, run_info), LearningRateMonitor(logging_interval='epoch')]
     for callback in config['run_params']['callbacks']:
         callbacks.append(callback['class'](**callback['args']))
     trainer = lp.Trainer(max_epochs=config['epochs'], logger=logger, deterministic=True,
@@ -69,6 +73,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--configs', nargs='+', help='Path to defualt config files', required=True)
     parser.add_argument('-o', '--overrides', nargs='*', help='Manual config updates in the form key1=value1')
+    parser.add_argument('-t', '--tune', nargs='*', help='Which modules to tune on. By defualt, parameter search is done on the experiment module (tuning.<experiment>)')
     parser.add_argument('--disable_progress_bar', action='store_true', help='Disable progress bar')
     parser.add_argument('--resume', action='store_true', help='Resume existing study')
     args = parser.parse_args()
@@ -77,14 +82,15 @@ if __name__ == '__main__':
     run_info['run_command'] = ' '.join(sys.argv)
 
     base_config = get_final_config(args.configs, args.overrides)
-    objective_fn = lambda trial: objective(trial, base_config, run_info)
+    tuning_modules = args.tune or [base_config['experiment']]
+    objective_fn = lambda trial: objective(trial, tuning_modules, base_config, run_info)
 
 
-    study_name = f'{base_config["experiment"]}_{base_config["dataset"]}'
+    study_name = '_'.join(tuning_modules) + f'_{base_config["dataset"]}'
     db_path = 'sqlite:///optuna.db'
     if not args.resume:
         try:
-            optuna.delete_study(study_name, storage=db_path)
+            optuna.delete_study(study_name=study_name, storage=db_path)
         except KeyError:
             pass
     study = optuna.create_study(

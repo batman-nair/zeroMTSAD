@@ -60,7 +60,8 @@ def apply_config_updates(config: dict, updates: Optional[List[str]]):
             current = current[first]
         if key not in current:
             print(f'Creating new config entry with {update}')
-        current[key] = eval(value)
+        # If the value is not a string, evaluate it
+        current[key] = value if value[0].isalpha() else eval(value)
     return config
 
 def get_final_config(config_paths: List[str], updates: list):
