@@ -48,7 +48,7 @@ if __name__ == '__main__':
     run_info = args.__dict__.copy()
     run_info['run_command'] = ' '.join(sys.argv)
 
-    overrides = args.overrides
+    overrides = args.overrides or []
     if args.seed:
         overrides.append(f'seed={args.seed}')
     config = get_final_config(args.config, overrides)
