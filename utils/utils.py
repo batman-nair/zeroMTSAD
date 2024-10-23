@@ -11,7 +11,8 @@ import lightning.pytorch as lp
 DEFAULT_CONFIG = {
     'seed': 10,
     'data_params': {
-        'data_splits': [0.75, 0.25],
+        # Fraction of the testing data to use for validation when there is no separate validation set
+        'validation_split': 0.3,
     },
     'transforms': {
         'train': {},

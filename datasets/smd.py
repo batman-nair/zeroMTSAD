@@ -17,7 +17,7 @@ class SMDDataModule(lp.LightningDataModule):
         self.test_server_ids = data_params['test_server_ids']
         self.train_pipeline = train_pipeline
         self.test_pipeline = test_pipeline
-        self.data_splits = data_params['data_splits']
+        self.validation_split = data_params['validation_split']
         self.batch_size = batch_size
         self.num_features = self.SMD_NUM_FEATURES
         self.standardize = standardize
@@ -48,11 +48,16 @@ class SMDDataModule(lp.LightningDataModule):
             self.val_datasets = [
                 SMDDataset(server_id=server_id, training=True, standardize=self.standardize_fn)
                 for server_id in self.val_server_ids]
+
+            split = 1.0
+            if set(self.val_server_ids) & set(self.test_server_ids):
+                split = self.validation_split
+
             transformed_train_data = [
-                make_pipe_from_dict(self.train_pipeline, DatasetSource(train_dataset))
+                make_pipe_from_dict(self.train_pipeline, DatasetSource(train_dataset, axis='time', end=train_dataset.seq_len))
                 for train_dataset in self.train_datasets]
             transformed_val_data = [
-                make_pipe_from_dict(self.train_pipeline, DatasetSource(val_dataset))
+                make_pipe_from_dict(self.train_pipeline, DatasetSource(val_dataset, axis='time', end=int(split*val_dataset.seq_len)))
                 for val_dataset in self.val_datasets]
             self.combined_train_dataset = torch.utils.data.ConcatDataset(transformed_train_data)
             self.combined_val_dataset = torch.utils.data.ConcatDataset(transformed_val_data)
@@ -61,8 +66,8 @@ class SMDDataModule(lp.LightningDataModule):
                 SMDDataset(server_id=server_id, training=False, standardize=self.standardize_fn)
                 for server_id in self.test_server_ids]
             transfomed_test_data = [
-                make_pipe_from_dict(self.test_pipeline, DatasetSource(ds))
-                for ds in self.test_datasets]
+                make_pipe_from_dict(self.test_pipeline, DatasetSource(test_dataset, axis='time', end=test_dataset.seq_len))
+                for test_dataset in self.test_datasets]
             self.combined_test_dataset = torch.utils.data.ConcatDataset(transfomed_test_data)
 
     def train_dataloader(self) -> torch.utils.data.DataLoader:
