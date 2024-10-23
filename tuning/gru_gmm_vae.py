@@ -9,10 +9,10 @@ def generate_trial_overrides(trial: optuna.trial.Trial) -> List[str]:
     gmm_components = trial.suggest_int('gmm_components', 2, 10)
     num_mc_samples = trial.suggest_int('num_mc_samples', 2, 64, step=2)
     window_size = trial.suggest_int('window_size', 5, 100, step=5)
-    learning_rate = trial.suggest_float('learning_rate', 1e-5, 1e-1, log=True)
+    learning_rate = trial.suggest_float('learning_rate', 1e-5, 1e-3, log=True)
 
     overrides = [
-        f'model_params.gru_hidden_dim={gru_hidden_dim}',
+        f'model_params.gru_hidden_dims=[{gru_hidden_dim}]',
         f'model_params.latent_dim={latent_dim}',
         f'model_params.gmm_components={gmm_components}',
         f'transforms.train.window.args.window_size={window_size}',
