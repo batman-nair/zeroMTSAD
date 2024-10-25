@@ -45,6 +45,7 @@ if __name__ == '__main__':
     parser.add_argument('--disable_progress_bar', action='store_true', help='Disable progress bar')
     parser.add_argument('--suffix', type=str, help='Add suffix to the run name', required=False)
     parser.add_argument('--log_dir', type=str, help='The base directory to save logs in', required=False, default='lightning_logs')
+    parser.add_argument('--device', type=str, help='Device to run on', required=False, default='auto')
 
     args = parser.parse_args()
     run_info = args.__dict__.copy()
@@ -102,9 +103,14 @@ if __name__ == '__main__':
     callbacks = [SaveConfigCallback(raw_config, run_info)]
     for callback in config['run_params']['callbacks']:
         callbacks.append(callback['class'](**callback['args']))
-    trainer = lp.Trainer(max_epochs=config['epochs'], logger=logger, deterministic=True,
-                         callbacks=callbacks,
-                         enable_progress_bar=not args.disable_progress_bar)
+    trainer = lp.Trainer(
+        max_epochs=config['epochs'],
+        logger=logger,
+        deterministic=True,
+        callbacks=callbacks,
+        enable_progress_bar=not args.disable_progress_bar,
+        accelerator=args.device
+    )
     if not args.test_only:
         trainer.fit(model=model, datamodule=data_module)
 

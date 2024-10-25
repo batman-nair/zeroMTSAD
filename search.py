@@ -60,9 +60,14 @@ def objective(trial: optuna.trial.Trial, tuning_modules: List[str], base_config:
     callbacks = [SaveConfigCallback(raw_config, run_info), LearningRateMonitor(logging_interval='epoch')]
     for callback in config['run_params']['callbacks']:
         callbacks.append(callback['class'](**callback['args']))
-    trainer = lp.Trainer(max_epochs=config['epochs'], logger=logger, deterministic=True,
-                         callbacks=callbacks,
-                         enable_progress_bar=not run_info['disable_progress_bar'])
+    trainer = lp.Trainer(
+        max_epochs=config['epochs'],
+        logger=logger,
+        deterministic=True,
+        callbacks=callbacks,
+        enable_progress_bar=not run_info['disable_progress_bar'],
+        accelerator=run_info['device']
+    )
 
     trainer.fit(model=model, datamodule=data_module)
 
@@ -76,6 +81,7 @@ if __name__ == '__main__':
     parser.add_argument('-t', '--tune', nargs='*', help='Which modules to tune on. By defualt, parameter search is done on the experiment module (tuning.<experiment>)')
     parser.add_argument('--disable_progress_bar', action='store_true', help='Disable progress bar')
     parser.add_argument('--resume', action='store_true', help='Resume existing study')
+    parser.add_argument('--device', type=str, help='Device to run on', required=False, default='auto')
     args = parser.parse_args()
     run_info = args.__dict__.copy()
     run_info['optuna_run'] = True
