@@ -46,7 +46,7 @@ class SMDDataModule(lp.LightningDataModule):
                 SMDDataset(server_id=server_id, training=True, standardize=self.standardize_fn)
                 for server_id in self.train_server_ids]
             self.val_datasets = [
-                SMDDataset(server_id=server_id, training=True, standardize=self.standardize_fn)
+                SMDDataset(server_id=server_id, training=False, standardize=self.standardize_fn)
                 for server_id in self.val_server_ids]
 
             split = 1.0
