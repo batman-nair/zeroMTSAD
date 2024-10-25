@@ -1,0 +1,16 @@
+experiment: kmeans
+batch_size: 1024
+epochs: 1
+model_params:
+  k: 5
+  batch_size: 1024  # Same as the experiment batch size
+transforms:
+  train:
+    window:
+      args:
+        window_size: 5
+  test:
+    window:
+      args:
+        window_size: 5
+  seq_len: 5  # Based on the window size of the training data
