@@ -4,4 +4,3 @@ data_params:
     11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
   val_server_ids: [21, 24]
   test_server_ids: [26]
-  data_splits: [0.9, 0.1]
