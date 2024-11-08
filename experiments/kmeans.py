@@ -22,13 +22,8 @@ class LitKMeansAD(LitTimeSeADModel):
         self.model.model.partial_fit(data)
 
     def validation_step(self, batch, batch_idx):
-        if not self.model_trained:  # To pass lightning sanity check
-            return 0
-        inputs, targets = batch
-        scores = self.model.compute_online_anomaly_score(inputs)
-        labels = self.model.format_online_targets(targets)
-        loss, _ = self.metrics['best_ts_f1_score'](labels, scores)
-        self.log('val_loss', loss, on_epoch=True)
+        # Log dummy validation loss for early stopping callback
+        self.log('val_loss', 0, on_epoch=True)
 
     def setup_detector(self, detector_params: dict, val_loader: torch.utils.data.DataLoader) -> None:
         self.detector = self.model
