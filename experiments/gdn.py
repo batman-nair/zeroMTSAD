@@ -10,8 +10,8 @@ def _batched_dot(vec1: torch.Tensor, vec2: torch.Tensor) -> torch.Tensor:
 
 
 class LitGDN(LitTimeSeADModel):
-    def __init__(self, seq_len, num_features, model_params, run_params):
-        super().__init__(run_params)
+    def __init__(self, seq_len, num_features, model_params, run_params, **kwargs):
+        super().__init__(run_params, **kwargs)
         self.model = GDN(num_features, seq_len, **model_params)
         self.save_hyperparameters(model_params)
 

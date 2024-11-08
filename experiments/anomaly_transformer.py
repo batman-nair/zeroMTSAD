@@ -5,8 +5,8 @@ from timesead_experiments.reconstruction.train_anomtransf import get_training_pi
 import torch
 
 class LitAnomalyTransformer(LitTimeSeADModel):
-    def __init__(self, seq_len, num_features, model_params, run_params):
-        super().__init__(run_params)
+    def __init__(self, seq_len, num_features, model_params, run_params, **kwargs):
+        super().__init__(run_params, **kwargs)
         self.model = AnomalyTransformer(seq_len, num_features, **model_params)
         self.loss = AnomTransf_Loss(lamb=3.0)
         self.save_hyperparameters(model_params)

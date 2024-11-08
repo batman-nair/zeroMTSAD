@@ -5,7 +5,6 @@ from timesead.data.preprocessing import minmax_scaler
 import numpy as np
 import lightning.pytorch as lp
 import torch
-import functools
 
 
 class SMDDataModule(lp.LightningDataModule):
@@ -46,11 +45,11 @@ class SMDDataModule(lp.LightningDataModule):
                 SMDDataset(server_id=server_id, training=True, standardize=self.standardize_fn)
                 for server_id in self.train_server_ids]
             self.val_datasets = [
-                SMDDataset(server_id=server_id, training=False, standardize=self.standardize_fn)
+                SMDDataset(server_id=server_id, training=True, standardize=self.standardize_fn)
                 for server_id in self.val_server_ids]
 
             split = 1.0
-            if set(self.val_server_ids) & set(self.test_server_ids):
+            if set(self.val_server_ids) & set(self.train_server_ids):
                 split = self.validation_split
 
             transformed_train_data = [

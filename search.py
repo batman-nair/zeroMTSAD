@@ -7,6 +7,8 @@ import argparse
 import sys
 import importlib
 import copy
+import os
+import json
 from typing import List
 
 import torch
@@ -53,7 +55,8 @@ def objective(trial: optuna.trial.Trial, tuning_modules: List[str], base_config:
     model = experiment_import.MODEL(config['transforms']['seq_len'],
                                     data_module.num_features,
                                     config['model_params'],
-                                    config['run_params'])
+                                    config['run_params'],
+                                    plot_anomalies=False)
 
 
     # Training and testing
@@ -70,8 +73,14 @@ def objective(trial: optuna.trial.Trial, tuning_modules: List[str], base_config:
     )
 
     trainer.fit(model=model, datamodule=data_module)
+    model.setup_detector(config['detector_params'], data_module.val_dataloader())
 
-    return trainer.callback_metrics['val_loss'].item()
+    trainer.test(model, datamodule=data_module)
+
+    with open(os.path.join(logger.log_dir, 'results.json'), 'r') as ff:
+        results = json.load(ff)
+
+    return results[run_info['metric']]['score']
 
 
 if __name__ == '__main__':
@@ -82,6 +91,7 @@ if __name__ == '__main__':
     parser.add_argument('--disable_progress_bar', action='store_true', help='Disable progress bar')
     parser.add_argument('--resume', action='store_true', help='Resume existing study')
     parser.add_argument('--device', type=str, help='Device to run on', required=False, default='auto')
+    parser.add_argument('--metric', type=str, help='Metric to optimize', default='best_ts_f1_score')
     args = parser.parse_args()
     run_info = args.__dict__.copy()
     run_info['optuna_run'] = True

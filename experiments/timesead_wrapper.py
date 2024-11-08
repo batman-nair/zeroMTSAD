@@ -13,7 +13,7 @@ class LitTimeSeADModel(lp.LightningModule):
     Implements the defaults for TimeSeAD models
     Note: self.detector should be defined in on_test_start
     '''
-    def __init__(self, run_params: dict):
+    def __init__(self, run_params: dict, **kwargs: dict):
         super().__init__()
         self.testing_step_labels = []
         self.testing_step_scores = []
@@ -30,6 +30,7 @@ class LitTimeSeADModel(lp.LightningModule):
         }
         self.run_params = run_params
         self.detector = None
+        self.plot_anomalies = kwargs.get('plot_anomalies', True)
 
     def training_step(self, batch, batch_idx):
         loss = self._calculate_batch_loss(batch)
@@ -78,7 +79,8 @@ class LitTimeSeADModel(lp.LightningModule):
         assert labels.shape == scores.shape
 
         self._log_results(labels, scores)
-        self._plot_anomalies(labels, scores)
+        if self.plot_anomalies:
+            self._plot_anomalies(labels, scores)
 
     def _log_results(self, labels, scores):
         results = {}

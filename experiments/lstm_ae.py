@@ -5,8 +5,8 @@ from timesead_experiments.reconstruction.train_lstm_ae import get_training_pipel
 import torch
 
 class LitLSTMAEMalhotra2016(LitTimeSeADModel):
-    def __init__(self, seq_len, num_features, model_params, run_params):
-        super().__init__(run_params)
+    def __init__(self, seq_len, num_features, model_params, run_params, **kwargs):
+        super().__init__(run_params, **kwargs)
         self.model = LSTMAEMalhotra2016(num_features, **model_params)
         self.save_hyperparameters(model_params)
 

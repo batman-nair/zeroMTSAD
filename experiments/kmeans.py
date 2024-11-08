@@ -5,8 +5,8 @@ from timesead_experiments.baselines.train_kmeans import get_training_pipeline, g
 import torch
 
 class LitKMeansAD(LitTimeSeADModel):
-    def __init__(self, seq_len, num_features, model_params, run_params):
-        super().__init__(run_params)
+    def __init__(self, seq_len, num_features, model_params, run_params, **kwargs):
+        super().__init__(run_params, **kwargs)
         self.model = KMeansAD(**model_params)
         self.model.window_size = seq_len if isinstance(seq_len, int) else seq_len[0]
         self.save_hyperparameters(model_params)

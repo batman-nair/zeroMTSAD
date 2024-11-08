@@ -6,8 +6,8 @@ import torch
 from torch.nn import functional as F
 
 class LitTCNS2SP(LitTimeSeADModel):
-    def __init__(self, seq_len, num_features, model_params, run_params):
-        super().__init__(run_params)
+    def __init__(self, seq_len, num_features, model_params, run_params, **kwargs):
+        super().__init__(run_params, **kwargs)
         self.model = TCNS2SPrediction(num_features, **model_params)
         self.save_hyperparameters(model_params)
 

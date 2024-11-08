@@ -5,8 +5,8 @@ from timesead_experiments.generative.vae.train_gmm_vae import get_training_pipel
 import torch
 
 class LitGRUGMMVAE(LitTimeSeADModel):
-    def __init__(self, seq_len, num_features, model_params, run_params):
-        super().__init__(run_params)
+    def __init__(self, seq_len, num_features, model_params, run_params, **kwargs):
+        super().__init__(run_params, **kwargs)
         self.model = GRUGMMVAE(num_features, **model_params)
         self.loss = GMMVAELoss()
         self.save_hyperparameters(model_params)

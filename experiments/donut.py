@@ -5,8 +5,8 @@ from timesead_experiments.generative.vae.train_donut import get_training_pipelin
 import torch
 
 class LitDonut(LitTimeSeADModel):
-    def __init__(self, seq_len, num_features, model_params, run_params):
-        super().__init__(run_params)
+    def __init__(self, seq_len, num_features, model_params, run_params, **kwargs):
+        super().__init__(run_params, **kwargs)
         self.model = Donut(num_features * seq_len, **model_params)
         self.loss = MaskedVAELoss()
         self.save_hyperparameters(model_params)
