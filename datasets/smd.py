@@ -1,10 +1,11 @@
-from timesead.data import SMDDataset
-from timesead.data.transforms import make_pipe_from_dict, make_dataset_split, DatasetSource
-from timesead.data.preprocessing import minmax_scaler
-
 import numpy as np
 import lightning.pytorch as lp
 import torch
+import functools
+
+from timesead.data import SMDDataset
+from timesead.data.transforms import make_pipe_from_dict, make_dataset_split, DatasetSource
+from timesead.data.preprocessing import minmax_scaler
 
 
 class SMDDataModule(lp.LightningDataModule):
@@ -20,13 +21,14 @@ class SMDDataModule(lp.LightningDataModule):
         self.batch_size = batch_size
         self.num_features = self.SMD_NUM_FEATURES
         self.standardize = standardize
+        self.num_workers = data_params['num_workers']
 
     def prepare_data(self) -> None:
         SMDDataset(server_id=1, download=True, standardize=False, preprocess=False)
         # Standardization has to be done dynamically as training server_ids can change
         if self.standardize == 'minmax':
             self._calculate_minmax_stats()
-            self.standardize_fn = lambda data, **_: minmax_scaler(data, self.stats)
+            self.standardize_fn = functools.partial(minmax_scaler, stats=self.stats)
 
     def _calculate_minmax_stats(self):
         train_datasets = [SMDDataset(server_id=server_id, training=True, standardize=False) for server_id in self.train_server_ids]
@@ -70,13 +72,13 @@ class SMDDataModule(lp.LightningDataModule):
             self.combined_test_dataset = torch.utils.data.ConcatDataset(transfomed_test_data)
 
     def train_dataloader(self) -> torch.utils.data.DataLoader:
-        return torch.utils.data.DataLoader(self.combined_train_dataset, batch_size=self.batch_size, num_workers=0, shuffle=False)
+        return torch.utils.data.DataLoader(self.combined_train_dataset, batch_size=self.batch_size, num_workers=self.num_workers, shuffle=False)
 
     def val_dataloader(self) -> torch.utils.data.DataLoader:
-        return torch.utils.data.DataLoader(self.combined_val_dataset, batch_size=self.batch_size, num_workers=0, shuffle=False)
+        return torch.utils.data.DataLoader(self.combined_val_dataset, batch_size=self.batch_size, num_workers=self.num_workers, shuffle=False)
 
     def test_dataloader(self) -> torch.utils.data.DataLoader:
-        return torch.utils.data.DataLoader(self.combined_test_dataset, batch_size=self.batch_size, num_workers=0, shuffle=False)
+        return torch.utils.data.DataLoader(self.combined_test_dataset, batch_size=self.batch_size, num_workers=self.num_workers, shuffle=False)
 
 
 DATASET = SMDDataModule

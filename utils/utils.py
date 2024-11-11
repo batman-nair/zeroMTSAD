@@ -13,6 +13,7 @@ DEFAULT_CONFIG = {
     'data_params': {
         # Fraction of the testing data to use for validation when there is no separate validation set
         'validation_split': 0.3,
+        'num_workers': 4,  # Number of workers for the DataLoader
     },
     'transforms': {
         'train': {},
