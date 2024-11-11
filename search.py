@@ -92,6 +92,7 @@ if __name__ == '__main__':
     parser.add_argument('--resume', action='store_true', help='Resume existing study')
     parser.add_argument('--device', type=str, help='Device to run on', required=False, default='auto')
     parser.add_argument('--metric', type=str, help='Metric to optimize', default='best_ts_f1_score')
+    parser.add_argument('--num_trials', type=int, help='Number of trials to run', default=50)
     args = parser.parse_args()
     run_info = args.__dict__.copy()
     run_info['optuna_run'] = True
@@ -114,5 +115,5 @@ if __name__ == '__main__':
         storage=db_path,
         load_if_exists=True
         )
-    study.optimize(objective_fn, n_trials=50)
+    study.optimize(objective_fn, n_trials=args.num_trials)
     print(study.best_params)
