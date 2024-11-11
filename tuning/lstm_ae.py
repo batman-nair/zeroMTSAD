@@ -4,19 +4,20 @@ import optuna
 
 
 def generate_trial_overrides(trail: optuna.trial.Trial) -> List[str]:
-    hidden_dimensions = trail.suggest_categorical(
-        'hidden_dimensions',
-        [
-            "[30]",
-            "[40]",
-            "[30, 30]",
-            "[50, 50]"
-        ])
-    window_size = trail.suggest_int('window_size', 5, 100)
+    hidden_dimensions = [
+        [30],
+        [50],
+        [30, 30],
+        [50, 50],
+        [30, 30, 30],
+        [50, 50, 50],
+    ]
+    hidden_dimensions_size = trail.suggest_int('hidden_dimensions_size', 0, len(hidden_dimensions) - 1)
+    window_size = trail.suggest_int('window_size', 5, 100, step=5)
     learning_rate = trail.suggest_float('learning_rate', 1e-5, 1e-1, log=True)
 
     overrides = [
-        f'model_params.hidden_dimensions={hidden_dimensions}',
+        f'model_params.hidden_dimensions={hidden_dimensions[hidden_dimensions_size]}',
         f'transforms.train.window.args.window_size={window_size}',
         f'transforms.test.window.args.window_size={window_size}',
         f'transforms.seq_len={window_size}',

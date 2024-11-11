@@ -8,7 +8,7 @@ def generate_trial_overrides(trial: optuna.trial.Trial) -> List[str]:
     n_heads = trial.suggest_int('n_heads', 4, 16, step=2)
     e_layers = trial.suggest_int('e_layers', 2, 6, step=2)
     d_ff = trial.suggest_int('d_ff', 64, 512, step=64)
-    dropout = trial.suggest_float('dropout', 0.0, 0.4)
+    dropout = trial.suggest_float('dropout', 0.0, 0.4, step=0.1)
     window_size = trial.suggest_int('window_size', 5, 100, step=5)
     learning_rate = trial.suggest_float('learning_rate', 1e-5, 1e-1, log=True)
 
