@@ -93,6 +93,7 @@ if __name__ == '__main__':
     parser.add_argument('--device', type=str, help='Device to run on', required=False, default='auto')
     parser.add_argument('--metric', type=str, help='Metric to optimize', default='best_ts_f1_score')
     parser.add_argument('--num_trials', type=int, help='Number of trials to run', default=50)
+    parser.add_argument('--seed', type=int, help='Seed for reproducibility', default=42)
     args = parser.parse_args()
     run_info = args.__dict__.copy()
     run_info['optuna_run'] = True
@@ -110,9 +111,11 @@ if __name__ == '__main__':
             optuna.delete_study(study_name=study_name, storage=db_path)
         except KeyError:
             pass
+    sampler = optuna.samplers.TPESampler(seed=args.seed)
     study = optuna.create_study(
         study_name=study_name,
         storage=db_path,
+        sampler=sampler,
         load_if_exists=True
         )
     study.optimize(objective_fn, n_trials=args.num_trials)
