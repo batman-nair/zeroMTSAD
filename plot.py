@@ -13,24 +13,22 @@ from utils.utils import recursive_update
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--checkpoint_path', type=str, help='Path to the checkpoint file', required=True)
     parser.add_argument('-l', '--log_dir', help='Path to the logging directory. Defaults to the directory of the checkpoint')
     parser.add_argument('-t', '--plot_threshold', action='store_true', help='Plot threshold line for anomaly')
     args = parser.parse_args()
 
-    checkpoint_path = args.checkpoint_path
-    log_dir = os.path.dirname(checkpoint_path)
-    if args.log_dir is not None:
-        log_dir = args.log_dir
+    log_dir = args.log_dir
+    model_path = os.path.join(log_dir, 'final_model.pth')
+    if not os.path.exists(model_path):
+        with open(os.path.join(log_dir, 'run.json'), 'r') as ff:
+            model_path = json.load(ff)['checkpoint_path']
+
     config_path = os.path.join(log_dir, 'config.json')
     results_path = os.path.join(log_dir, 'results.json')
-
     with open(config_path, 'r') as ff:
         config = json.load(ff)
     with open(results_path, 'r') as ff:
         results = json.load(ff)
-    if 'batch_size' not in config:
-        config['batch_size'] = 128
 
     data_import = importlib.import_module(f'datasets.{config["dataset"]}')
     experiment_import = importlib.import_module(f'experiments.{config["experiment"]}')
@@ -43,8 +41,8 @@ if __name__ == '__main__':
     data_module.prepare_data()
     data_module.setup('test')
 
-    print('Loading model from', checkpoint_path)
-    loaded_data = torch.load(checkpoint_path)
+    print('Loading model from', model_path)
+    loaded_data = torch.load(model_path)
     if 'model' not in loaded_data:
         model = experiment_import.MODEL(config['transforms']['seq_len'],
                                         data_module.num_features,
@@ -52,7 +50,7 @@ if __name__ == '__main__':
                                         config['run_params'])
         model.detector = loaded_data['detector']
     else:
-        model = torch.load(checkpoint_path)['model']
+        model = torch.load(model_path)['model']
 
     print('Computing anomaly scores')
     labels, scores = model.detector.get_labels_and_scores(data_module.test_dataloader())
