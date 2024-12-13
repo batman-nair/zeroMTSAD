@@ -107,10 +107,9 @@ if __name__ == '__main__':
     study_name = '_'.join(tuning_modules) + f'_{base_config["dataset"]}'
     db_path = 'sqlite:///optuna.db'
     if not args.resume:
-        try:
+        study_name += '_temp'
+        if study_name in optuna.get_all_study_names(storage=db_path):
             optuna.delete_study(study_name=study_name, storage=db_path)
-        except KeyError:
-            pass
     sampler = optuna.samplers.TPESampler(seed=args.seed)
     study = optuna.create_study(
         study_name=study_name,
@@ -120,3 +119,14 @@ if __name__ == '__main__':
         )
     study.optimize(objective_fn, n_trials=args.num_trials)
     print(study.best_params)
+
+    if not args.resume:
+        final_study_name = study_name.replace('_temp', '')
+        optuna.delete_study(study_name=final_study_name, storage=db_path)
+        optuna.copy_study(
+            from_study_name=study_name,
+            to_study_name=final_study_name,
+            from_storage=db_path,
+            to_storage=db_path
+            )
+        optuna.delete_study(study_name=study_name, storage=db_path)
