@@ -94,6 +94,7 @@ if __name__ == '__main__':
     parser.add_argument('--metric', type=str, help='Metric to optimize', default='best_ts_f1_score')
     parser.add_argument('--num_trials', type=int, help='Number of trials to run', default=50)
     parser.add_argument('--seed', type=int, help='Seed for reproducibility', default=42)
+    parser.add_argument('--restart_study', action='store_true', help='Delete the existing study and start a new one. Useful for parallel run setup.')
     args = parser.parse_args()
     run_info = args.__dict__.copy()
     run_info['optuna_run'] = True
@@ -103,13 +104,18 @@ if __name__ == '__main__':
     tuning_modules = args.tune or [base_config['experiment']]
     objective_fn = lambda trial: objective(trial, tuning_modules, base_config, run_info)
 
-
     study_name = '_'.join(tuning_modules) + f'_{base_config["dataset"]}'
     db_path = 'sqlite:///optuna.db'
-    if not args.resume:
+    if args.restart_study:
+        optuna.delete_study(study_name=study_name, storage=db_path)
+
+    # If the study already exists, run a temporary study to avoid overwriting the existing one
+    sanity_temp_run = not args.resume and study_name in optuna.get_all_study_names(storage=db_path)
+    if sanity_temp_run:
         study_name += '_temp'
         if study_name in optuna.get_all_study_names(storage=db_path):
             optuna.delete_study(study_name=study_name, storage=db_path)
+
     sampler = optuna.samplers.TPESampler(seed=args.seed)
     study = optuna.create_study(
         study_name=study_name,
@@ -120,7 +126,7 @@ if __name__ == '__main__':
     study.optimize(objective_fn, n_trials=args.num_trials)
     print(study.best_params)
 
-    if not args.resume:
+    if sanity_temp_run:
         final_study_name = study_name.replace('_temp', '')
         optuna.delete_study(study_name=final_study_name, storage=db_path)
         optuna.copy_study(
