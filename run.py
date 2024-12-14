@@ -22,7 +22,7 @@ def _sanity_check_checkpoint(checkpoint_path: str, config: dict):
 
     config1, config2 = None, None
     def remove_non_training_data(config: dict):
-        del config['data_params']['test_server_ids']
+        del config['data_params']['test_ids']
     with open(checkpoint_config_path, 'r') as ff:
         checkpoint_config = json.load(ff)
         config1 = copy.deepcopy(config)
@@ -67,8 +67,8 @@ if __name__ == '__main__':
     lp.seed_everything(config['seed'])
 
     # Setting up the logger and loading the dataset and model
-    testing_server_ids = ','.join([str(id) for id in config['data_params']['test_server_ids']])
-    run_name = f'{config["experiment"]}_{config["dataset"]}_{testing_server_ids}'
+    testing_ids = ','.join([str(id) for id in config['data_params']['test_ids']])
+    run_name = f'{config["experiment"]}_{config["dataset"]}_{testing_ids}'
     if args.suffix:
         run_name += f'_{args.suffix}'
     logger = TensorBoardLogger(args.log_dir, name=run_name)
