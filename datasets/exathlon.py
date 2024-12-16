@@ -25,10 +25,6 @@ class ExathlonDataModule(lp.LightningDataModule):
 
     def prepare_data(self) -> None:
         ExathlonDataset(app_id=1, download=True, standardize=False, preprocess=True)
-        # Standardization has to be done dynamically as training app_ids can change
-        if self.standardize == 'minmax':
-            self._calculate_minmax_stats()
-            self.standardize_fn = functools.partial(minmax_scaler, stats=self.stats)
 
     def _calculate_minmax_stats(self):
         train_datasets = [ExathlonDataset(app_id=app_id, training=True, standardize=False) for app_id in self.train_ids]
@@ -44,6 +40,10 @@ class ExathlonDataModule(lp.LightningDataModule):
         self.stats = {'min': min_vals, 'max': max_vals}
 
     def setup(self, stage: str) -> None:
+        # Standardization has to be done dynamically as training app_ids can change
+        if self.standardize == 'minmax':
+            self._calculate_minmax_stats()
+            self.standardize_fn = functools.partial(minmax_scaler, stats=self.stats)
         if stage == 'fit':
             self.train_datasets = [
                 ExathlonDataset(app_id=app_id, training=True, standardize=self.standardize_fn)

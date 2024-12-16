@@ -25,10 +25,6 @@ class SMDDataModule(lp.LightningDataModule):
 
     def prepare_data(self) -> None:
         SMDDataset(server_id=1, download=True, standardize=False, preprocess=False)
-        # Standardization has to be done dynamically as training server_ids can change
-        if self.standardize == 'minmax':
-            self._calculate_minmax_stats()
-            self.standardize_fn = functools.partial(minmax_scaler, stats=self.stats)
 
     def _calculate_minmax_stats(self):
         train_datasets = [SMDDataset(server_id=server_id, training=True, standardize=False) for server_id in self.train_ids]
@@ -42,6 +38,11 @@ class SMDDataModule(lp.LightningDataModule):
         self.stats = {'min': min_vals, 'max': max_vals}
 
     def setup(self, stage: str) -> None:
+        # Standardization has to be done dynamically as training server_ids can change
+        if self.standardize == 'minmax':
+            self._calculate_minmax_stats()
+            self.standardize_fn = functools.partial(minmax_scaler, stats=self.stats)
+
         if stage == 'fit':
             self.train_datasets = [
                 SMDDataset(server_id=server_id, training=True, standardize=self.standardize_fn)
