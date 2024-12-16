@@ -5,7 +5,7 @@ import optuna
 
 def generate_trial_overrides(trial: optuna.trial.Trial) -> List[str]:
     top_k = trial.suggest_int('top_k', 5, 20, step=2)
-    d_model = trial.suggest_int('d_model', 32, 128, step=32)
+    d_model = trial.suggest_int('d_model', 32, 64, step=32)
     d_ff = trial.suggest_int('d_ff', 32, 128, step=32)
     num_kernels = trial.suggest_int('num_kernels', 4, 16, step=4)
     e_layers = trial.suggest_int('e_layers', 2, 6, step=2)
