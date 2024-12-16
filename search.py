@@ -121,6 +121,7 @@ if __name__ == '__main__':
         study_name=study_name,
         storage=db_path,
         sampler=sampler,
+        direction='maximize',
         load_if_exists=True
         )
     study.optimize(objective_fn, n_trials=args.num_trials)
