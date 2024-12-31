@@ -1,0 +1,30 @@
+experiment: beatgan
+model_params:
+  conv_filters: 32
+  latent_dim: 50
+  loss_params:
+    adversarial_weight: 1.0
+epochs: 100
+transforms:
+  train:
+    window:
+      args:
+        window_size: 320
+    augmentation:
+      args:
+        distort_fraction: 0.05
+        n_augmentations: 2
+    reconstruction:
+      args:
+        replace_labels: True
+  test:
+    window:
+      args:
+        window_size: 320
+  seq_len: 320  # Based on the window size of the training data
+run_params:
+  scheduler:
+    class: 'torch.optim.lr_scheduler.MultiStepLR'
+    args:
+      milestones: [20]
+      gamma: 0.1
