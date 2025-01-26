@@ -1,0 +1,26 @@
+experiment: lstm_p
+model_params:
+  lstm_hidden_dims: [30, 20]
+  linear_hidden_layers: [40]
+  prediction_horizon: 3  # Same as set in transformation pipeline
+epochs: 100
+transforms:
+  train:
+    prediction:
+      args:
+        window_size: 50
+        prediction_horizon: 3
+        replace_labels: True
+  test:
+    prediction:
+      args:
+        window_size: 50
+        prediction_horizon: 3
+        replace_labels: False
+  seq_len: 50  # Based on the window size of the training data
+run_params:
+  scheduler:
+    class: 'torch.optim.lr_scheduler.MultiStepLR'
+    args:
+      milestones: [20]
+      gamma: 0.1

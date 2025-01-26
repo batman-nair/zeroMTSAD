@@ -84,7 +84,7 @@ def convert_str_to_objects(config: dict):
                 for item in value:
                     convert_str_to_objects(item)
         elif isinstance(value, str):
-            if key == 'class':
+            if key == 'class' or value.count('.') > 1:
                 config[key] = eval(value)
             # Convert lambda functions
             if value.startswith('lambda'):
