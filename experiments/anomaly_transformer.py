@@ -1,6 +1,6 @@
 from experiments.timesead_wrapper import LitTimeSeADModel
 from timesead.models.reconstruction import AnomalyTransformer, AnomTransf_Loss, AnomTransf_AnomalyDetector
-from timesead_experiments.reconstruction.train_anomtransf import get_training_pipeline, get_test_pipeline
+from timesead_experiments.reconstruction.train_anomtransf import get_training_pipeline, get_test_pipeline, get_batch_dim
 
 import torch
 
@@ -33,3 +33,4 @@ class LitAnomalyTransformer(LitTimeSeADModel):
 MODEL = LitAnomalyTransformer
 TRAIN_PIPELINE = get_training_pipeline()
 TEST_PIPELINE = get_test_pipeline()
+BATCH_DIM = get_batch_dim()

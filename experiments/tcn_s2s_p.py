@@ -1,6 +1,6 @@
 from experiments.timesead_wrapper import LitTimeSeADModel
 from timesead.models.prediction import TCNS2SPrediction, TCNS2SPredictionAnomalyDetector
-from timesead_experiments.prediction.train_tcn_prediction_he import get_training_pipeline, get_test_pipeline
+from timesead_experiments.prediction.train_tcn_prediction_he import get_training_pipeline, get_test_pipeline, get_batch_dim
 
 import torch
 from torch.nn import functional as F
@@ -56,4 +56,4 @@ class LitTCNS2SP(LitTimeSeADModel):
 MODEL = LitTCNS2SP
 TRAIN_PIPELINE = get_training_pipeline()
 TEST_PIPELINE = get_test_pipeline()
-
+BATCH_DIM = get_batch_dim()

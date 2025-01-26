@@ -1,6 +1,6 @@
 from experiments.timesead_wrapper import LitTimeSeADModel
 from timesead.models.generative import Donut, DonutAnomalyDetector, MaskedVAELoss
-from timesead_experiments.generative.vae.train_donut import get_training_pipeline, get_test_pipeline
+from timesead_experiments.generative.vae.train_donut import get_training_pipeline, get_test_pipeline, get_batch_dim
 
 import torch
 
@@ -18,3 +18,4 @@ class LitDonut(LitTimeSeADModel):
 MODEL = LitDonut
 TRAIN_PIPELINE = get_training_pipeline()
 TEST_PIPELINE = get_test_pipeline()
+BATCH_DIM = get_batch_dim()

@@ -4,13 +4,22 @@ import torch
 import functools
 
 from timesead.data import ExathlonDataset
+from timesead.data.dataset import collate_fn
 from timesead.data.transforms import make_pipe_from_dict, DatasetSource
 from timesead.data.preprocessing import minmax_scaler
 
 
 class ExathlonDataModule(lp.LightningDataModule):
     NUM_FEATURES = 19
-    def __init__(self, data_params: dict, batch_size: int, train_pipeline: dict={}, test_pipeline: dict={}, standardize: str='minmax'):
+    def __init__(
+            self,
+            data_params: dict,
+            batch_size: int,
+            train_pipeline: dict={},
+            test_pipeline: dict={},
+            standardize: str='minmax',
+            batch_dim: int=0
+    ):
         super().__init__()
         self.train_ids = data_params['train_ids']
         self.val_ids = data_params['val_ids']
@@ -18,10 +27,15 @@ class ExathlonDataModule(lp.LightningDataModule):
         self.train_pipeline = train_pipeline
         self.test_pipeline = test_pipeline
         self.validation_split = data_params['validation_split']
-        self.batch_size = batch_size
         self.num_features = self.NUM_FEATURES
         self.standardize = standardize
-        self.num_workers = data_params['num_workers']
+        self.dataloader_params = {
+            'batch_size': batch_size,
+            'num_workers': data_params['num_workers'],
+            'persistent_workers': True,
+            'shuffle': False,
+            'collate_fn': collate_fn(batch_dim)
+        }
 
     def prepare_data(self) -> None:
         ExathlonDataset(app_id=1, download=True, standardize=False, preprocess=True)
@@ -74,13 +88,13 @@ class ExathlonDataModule(lp.LightningDataModule):
             self.combined_test_dataset = torch.utils.data.ConcatDataset(transfomed_test_data)
 
     def train_dataloader(self) -> torch.utils.data.DataLoader:
-        return torch.utils.data.DataLoader(self.combined_train_dataset, batch_size=self.batch_size, num_workers=self.num_workers, shuffle=False)
+        return torch.utils.data.DataLoader(self.combined_train_dataset, **self.dataloader_params)
 
     def val_dataloader(self) -> torch.utils.data.DataLoader:
-        return torch.utils.data.DataLoader(self.combined_val_dataset, batch_size=self.batch_size, num_workers=self.num_workers, shuffle=False)
+        return torch.utils.data.DataLoader(self.combined_val_dataset, **self.dataloader_params)
 
     def test_dataloader(self) -> torch.utils.data.DataLoader:
-        return torch.utils.data.DataLoader(self.combined_test_dataset, batch_size=self.batch_size, num_workers=self.num_workers, shuffle=False)
+        return torch.utils.data.DataLoader(self.combined_test_dataset, **self.dataloader_params)
 
 
 DATASET = ExathlonDataModule

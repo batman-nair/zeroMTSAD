@@ -1,6 +1,6 @@
 from experiments.timesead_wrapper import LitTimeSeADModel
 from timesead.models.generative import GRUGMMVAE, GMMVAELoss, GMMVAEAnomalyDetector
-from timesead_experiments.generative.vae.train_gmm_vae import get_training_pipeline, get_test_pipeline
+from timesead_experiments.generative.vae.train_gmm_vae import get_training_pipeline, get_test_pipeline, get_batch_dim
 
 import torch
 
@@ -18,4 +18,4 @@ class LitGRUGMMVAE(LitTimeSeADModel):
 MODEL = LitGRUGMMVAE
 TRAIN_PIPELINE = get_training_pipeline()
 TEST_PIPELINE = get_test_pipeline()
-
+BATCH_DIM = get_batch_dim()

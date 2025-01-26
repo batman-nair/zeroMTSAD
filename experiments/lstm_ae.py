@@ -1,6 +1,6 @@
 from experiments.timesead_wrapper import LitTimeSeADModel
 from timesead.models.reconstruction import LSTMAEMalhotra2016, LSTMAEAnomalyDetector
-from timesead_experiments.reconstruction.train_lstm_ae import get_training_pipeline, get_test_pipeline
+from timesead_experiments.reconstruction.train_lstm_ae import get_training_pipeline, get_test_pipeline, get_batch_dim
 
 import torch
 
@@ -18,3 +18,4 @@ class LitLSTMAEMalhotra2016(LitTimeSeADModel):
 MODEL = LitLSTMAEMalhotra2016
 TRAIN_PIPELINE = get_training_pipeline()
 TEST_PIPELINE = get_test_pipeline()
+BATCH_DIM = get_batch_dim()

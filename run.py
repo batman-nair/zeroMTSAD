@@ -77,10 +77,17 @@ if __name__ == '__main__':
 
     train_transform = recursive_update(experiment_import.TRAIN_PIPELINE, config['transforms']['train'])
     test_transform = recursive_update(experiment_import.TEST_PIPELINE, config['transforms']['test'])
+    batch_dim = experiment_import.BATCH_DIM
     if config['transforms']['train'] or config['transforms']['test']:
         print('Train transform pipeline:', train_transform)
         print('Test transform pipeline:', test_transform)
-    data_module = data_import.DATASET(config['data_params'], config['batch_size'], train_transform, test_transform)
+    data_module = data_import.DATASET(
+        config['data_params'],
+        config['batch_size'],
+        train_transform,
+        test_transform,
+        batch_dim=batch_dim
+        )
     if args.checkpoint_path:
         _sanity_check_checkpoint(args.checkpoint_path, raw_config)
         loaded_data = torch.load(args.checkpoint_path)

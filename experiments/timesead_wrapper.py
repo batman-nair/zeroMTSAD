@@ -104,3 +104,4 @@ class LitTimeSeADModel(lp.LightningModule):
 MODEL = LitTimeSeADModel
 TRAIN_PIPELINE = {}
 TEST_PIPELINE = {}
+BATCH_DIM = 0

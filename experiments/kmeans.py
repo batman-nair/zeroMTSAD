@@ -1,6 +1,6 @@
 from experiments.timesead_wrapper import LitTimeSeADModel
 from timesead.models.baselines.kmeans import KMeansAD
-from timesead_experiments.baselines.train_kmeans import get_training_pipeline, get_test_pipeline
+from timesead_experiments.baselines.train_kmeans import get_training_pipeline, get_test_pipeline, get_batch_dim
 
 import torch
 
@@ -35,3 +35,4 @@ class LitKMeansAD(LitTimeSeADModel):
 MODEL = LitKMeansAD
 TRAIN_PIPELINE = get_training_pipeline()
 TEST_PIPELINE = get_test_pipeline()
+BATCH_DIM = get_batch_dim()
