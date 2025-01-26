@@ -87,7 +87,7 @@ if __name__ == '__main__':
         train_transform,
         test_transform,
         batch_dim=batch_dim
-        )
+    )
     if args.checkpoint_path:
         _sanity_check_checkpoint(args.checkpoint_path, raw_config)
         loaded_data = torch.load(args.checkpoint_path)

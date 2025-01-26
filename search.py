@@ -51,7 +51,14 @@ def objective(trial: optuna.trial.Trial, tuning_modules: List[str], base_config:
 
     train_transform = recursive_update(experiment_import.TRAIN_PIPELINE, config['transforms']['train'])
     test_transform = recursive_update(experiment_import.TEST_PIPELINE, config['transforms']['test'])
-    data_module = data_import.DATASET(config['data_params'], config['batch_size'], train_transform, test_transform)
+    batch_dim = experiment_import.BATCH_DIM
+    data_module = data_import.DATASET(
+        config['data_params'],
+        config['batch_size'],
+        train_transform,
+        test_transform,
+        batch_dim=batch_dim
+    )
     model = experiment_import.MODEL(config['transforms']['seq_len'],
                                     data_module.num_features,
                                     config['model_params'],
