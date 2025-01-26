@@ -1,7 +1,6 @@
 dataset: smd
 data_params:
-  train_ids: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-    11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
-  val_ids: [21, 24]
-  test_ids: [21, 24] # Use same server ids as validation
-
+  train_ids: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+    10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+  val_ids: [20, 23]
+  test_ids: [20, 23]  # Use same ids as validation

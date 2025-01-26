@@ -2,4 +2,4 @@ dataset: exathlon
 data_params:
   train_ids: [1, 2, 3, 4]
   val_ids: [9, 10]
-  test_ids: [9, 10]
+  test_ids: [9, 10]  # Use same ids as validation
