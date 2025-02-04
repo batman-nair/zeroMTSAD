@@ -83,6 +83,8 @@ class LitTimeSeADModel(lp.LightningModule):
             self._plot_anomalies(labels, scores)
 
     def _log_results(self, labels, scores):
+        # Consider nan scores as anomalies by giving them the maximum score
+        scores[scores.isfinite() == False] = max(scores)
         results = {}
         for metric_name, metric_fn in self.metrics.items():
             test_score, other_info = metric_fn(labels, scores)
