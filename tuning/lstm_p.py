@@ -13,7 +13,7 @@ def generate_trial_overrides(trial: optuna.trial.Trial) -> List[str]:
     lstm_hidden_dim_size = trial.suggest_int('lstm_hidden_dim_size', 0, len(hidden_dimensions) - 1)
     linear_hidden_dim_size = trial.suggest_int('linear_hidden_dim_size', 0, len(hidden_dimensions) - 1)
     window_size = trial.suggest_int('window_size', 5, 100, step=5)
-    prediction_horizon = trial.suggest_int('prediction_horizon', 1, 10, step=2)
+    prediction_horizon = trial.suggest_int('prediction_horizon', 2, 10, step=2)
     learning_rate = trial.suggest_float('learning_rate', 1e-5, 1e-1, log=True)
 
     overrides = [
