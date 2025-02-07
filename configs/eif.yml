@@ -1,0 +1,18 @@
+experiment: eif
+epochs: 1
+model_params:
+  n_trees: 200
+  sample_size: 256
+  extension_level: 1
+transforms:
+  train:
+    window:
+      args:
+        window_size: 5
+        step_size: 2
+  test:
+    window:
+      args:
+        window_size: 5
+        step_size: 2
+  seq_len: 5  # Based on the window size of the training data
