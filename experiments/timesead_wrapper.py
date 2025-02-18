@@ -84,6 +84,8 @@ class LitTimeSeADModel(lp.LightningModule):
 
     def _log_results(self, labels, scores):
         # Consider nan scores as anomalies by giving them the maximum score
+        if any(scores.isfinite()) == False:
+            scores[0] = 0.0  # Set one proper value incase all values are nans
         scores[scores.isfinite() == False] = max(scores)
         results = {}
         for metric_name, metric_fn in self.metrics.items():
