@@ -5,7 +5,7 @@ import optuna
 
 def generate_trial_overrides(trial: optuna.trial.Trial) -> List[str]:
     conv_filters = trial.suggest_int('conv_filters', 16, 64, step=16)
-    latent_dim = trial.suggest_int('latent_dim', 25, 100, step=25)
+    latent_dim = trial.suggest_int('latent_dim', 25, 50, step=25)
     adversarial_weight = trial.suggest_float('adversarial_weight', 0.8, 1.0, step=0.1)
     distort_fraction = trial.suggest_float('distort_fraction', 0.05, 0.2, step=0.05)
     n_augmentations = trial.suggest_int('n_augmentations', 1, 3, step=1)
