@@ -1,0 +1,21 @@
+model_params:
+  hidden_dims: [150, 150]
+  latent_dim: 8
+  mask_prob: 0.06
+transforms:
+  train:
+    window:
+      args:
+        window_size: 40
+  test:
+    window:
+      args:
+        window_size: 40
+  seq_len: 40  # Based on the window size of the training data
+run_params:
+  optimizer:
+    args:
+      lr: 4.0e-5
+detector_params:
+  num_mc_samples: 16
+

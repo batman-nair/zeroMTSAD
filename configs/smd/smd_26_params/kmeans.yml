@@ -1,0 +1,17 @@
+batch_size: 1024
+model_params:
+  k: 100
+  batch_size: 1024  # Same as the experiment batch size
+transforms:
+  train:
+    window:
+      args:
+        window_size: 10
+        step_size: 10
+  test:
+    window:
+      args:
+        window_size: 10
+        step_size: 10
+  seq_len: 10  # Based on the window size of the training data
+

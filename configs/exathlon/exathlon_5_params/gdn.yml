@@ -1,0 +1,24 @@
+model_params:
+  dim: 32
+  out_layer_hidden_dims: [64]
+  topk: 19
+  dropout_prob: 0.0
+transforms:
+  train:
+    prediction:
+      args:
+        window_size: 25
+        prediction_horizon: 1
+        replace_labels: True
+  test:
+    prediction:
+      args:
+        window_size: 25
+        prediction_horizon: 1
+        replace_labels: False
+  seq_len: 25  # Based on the window size of the training data
+run_params:
+  optimizer:
+    args:
+      lr: 1.0e-2
+

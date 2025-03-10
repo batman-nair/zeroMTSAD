@@ -1,0 +1,18 @@
+model_params:
+  top_k: 5
+  d_model: 64
+  d_ff: 64
+  num_kernels: 8
+  e_layers: 2
+  dropout: 0.0
+transforms:
+  train:
+    window:
+      args:
+        window_size: 50
+  test:
+    window:
+      args:
+        window_size: 50
+  seq_len: 50  # Based on the window size of the training data
+

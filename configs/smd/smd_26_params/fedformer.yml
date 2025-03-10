@@ -1,0 +1,19 @@
+model_params:
+  moving_avg: 25
+  model_dim: 128
+  dropout: 0.0
+  num_heads: 8
+  fcn_dim: 128
+  encoder_layers: 3
+  modes: 32
+transforms:
+  train:
+    window:
+      args:
+        window_size: 100
+  test:
+    window:
+      args:
+        window_size: 100
+  seq_len: 100  # Based on the window size of the training data
+

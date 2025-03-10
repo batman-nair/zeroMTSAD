@@ -1,0 +1,22 @@
+model_params:
+  d_model: 256
+  n_heads: 8
+  e_layers: 2
+  d_ff: 256
+  dropout: 0.0
+  output_attention: True
+transforms:
+  train:
+    window:
+      args:
+        window_size: 50
+  test:
+    window:
+      args:
+        window_size: 50
+  seq_len: 50  # Based on the window size of the training data
+run_params:
+  optimizer:
+    args:
+      lr: 1.0e-4
+

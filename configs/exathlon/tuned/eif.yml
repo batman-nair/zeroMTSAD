@@ -1,0 +1,17 @@
+model_params:
+  n_trees: 300
+  sample_size: 256
+  extension_level: 0
+transforms:
+  train:
+    window:
+      args:
+        window_size: 10
+        step_size: 4
+  test:
+    window:
+      args:
+        window_size: 10
+        step_size: 4
+  seq_len: 10  # Based on the window size of the training data
+

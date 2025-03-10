@@ -1,0 +1,17 @@
+model_params:
+  hidden_dimensions: [30, 30, 30]
+transforms:
+  train:
+    window:
+      args:
+        window_size: 5
+  test:
+    window:
+      args:
+        window_size: 5
+  seq_len: 5  # Based on the window size of the training data
+run_params:
+  optimizer:
+    args:
+      lr: 0.04
+

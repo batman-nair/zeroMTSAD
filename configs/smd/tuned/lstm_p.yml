@@ -1,0 +1,23 @@
+model_params:
+  lstm_hidden_dims: [30, 30]
+  linear_hidden_layers: [50]
+  prediction_horizon: 6  # Same as set in transformation pipeline
+transforms:
+  train:
+    prediction:
+      args:
+        window_size: 30
+        prediction_horizon: 6
+        replace_labels: True
+  test:
+    prediction:
+      args:
+        window_size: 30
+        prediction_horizon: 6
+        replace_labels: False
+  seq_len: 30  # Based on the window size of the training data
+run_params:
+  optimizer:
+    args:
+      lr: 0.02
+
