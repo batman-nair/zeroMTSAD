@@ -121,7 +121,7 @@ def extract_results(
         train_ids = test_ids
     elif type == 'zero':
         if dataset == 'smd':
-            train_ids = list(range(1, 21))
+            train_ids = list(range(0, 20))
         elif dataset == 'exathlon':
             train_ids = list(range(1, 5))
         else:

@@ -44,9 +44,16 @@ def generate_plots_for_log(log_dir: str, plot_threshold: bool):
 
     train_transform = recursive_update(experiment_import.TRAIN_PIPELINE, config['transforms']['train'])
     test_transform = recursive_update(experiment_import.TEST_PIPELINE, config['transforms']['test'])
+    batch_dim = experiment_import.BATCH_DIM
 
     print('Setting up data module')
-    data_module = data_import.DATASET(config['data_params'], config['batch_size'], train_transform, test_transform)
+    data_module = data_import.DATASET(
+        config['data_params'],
+        config['batch_size'],
+        train_transform,
+        test_transform,
+        batch_dim=batch_dim,
+    )
     data_module.prepare_data()
     data_module.setup('test')
 
