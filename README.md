@@ -7,22 +7,20 @@ Testing efficacy of anomaly detection models in a zero-shot multivariate time se
 ### 🎯 Key Finding: Zero-Shot Works!
 
 ![Overall Performance Distribution](images/overall_performance_distribution.png)
+
 *Zero-shot anomaly detection achieves performance statistically comparable to dataset-specific training (p ≥ 0.05)*
 
 ### 🔥 Surprise: Simple Beats Complex
 
 ![Shallow vs Deep Performance](images/shallow_deep_distribution_exathlon.png)
+
 *Shallow statistical methods (KMeans, EIF) often outperform sophisticated deep learning models in zero-shot scenarios*
 
 ### ⚖️ Model Stability Matters
 
 ![Model Stability](images/model_coefficient_of_variation.png)
+
 *Anomaly Transformer shows extreme initialization sensitivity while KMeans/FEDFormer exhibit minimal variation*
-
-### 📊 Performance Comparison
-
-![Zero-Shot vs Normal](images/zero_normal_score_comparison_exathlon.png)
-*Direct performance comparison between zero-shot and normal evaluation approaches*
 
 
 ## Setup
