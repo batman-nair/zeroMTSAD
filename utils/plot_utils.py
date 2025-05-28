@@ -117,6 +117,15 @@ def extract_results(
     """
     if type not in ['normal', 'zero']:
         raise ValueError(f'Invalid type: {type}')
+    if len(test_ids) > 1:
+        final_data = None
+        for test_id in test_ids:
+            part_data = extract_results(data, dataset, type, [test_id], metric)
+            if final_data is None:
+                final_data = part_data
+            else:
+                final_data = pd.concat([final_data, part_data])
+        return final_data
     if type == 'normal':
         train_ids = test_ids
     elif type == 'zero':
